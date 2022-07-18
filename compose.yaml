@@ -1,0 +1,106 @@
+version: '3.7'
+
+services:
+  web:
+    image: killka1997/autodom-img
+   
+
+    expose:
+    - 8000
+    volumes:
+      - static_volume:/static/:rw
+    environment:
+      - DJANGO_SETTINGS_MODULE=Autodom.settings
+      - BROKER_URL=redis://redis:6379
+      - RESULT_BACKEND=redis://redis:6379
+      - POSTGRES_PASSWORD=qwerty1234
+      - POSTGRES_USER=admin123
+      - POSTGRES_HOST=db
+    depends_on:
+      - redis
+      - db
+
+  celery:
+    image: killka1997/autodom-img
+   
+    command: celery -A Autodom worker -P solo --loglevel=info
+    volumes:
+      - static_volume:/static/:rw
+    environment:
+      - DJANGO_SETTINGS_MODULE=Autodom.settings
+      - BROKER_URL=redis://redis:6379
+      - RESULT_BACKEND=redis://redis:6379
+      - POSTGRES_PASSWORD=qwerty1234
+      - POSTGRES_USER=admin123
+      - POSTGRES_HOST=db
+    depends_on:
+      - web
+      - redis
+  
+  beat:
+    image: killka1997/autodom-img
+   
+    command: celery -A Autodom beat -l DEBUG
+    volumes:
+      - static_volume:/static/:rw
+    environment:
+      - DJANGO_SETTINGS_MODULE=Autodom.settings
+      - BROKER_URL=redis://redis:6379
+      - RESULT_BACKEND=redis://redis:6379
+      - POSTGRES_PASSWORD=qwerty1234
+      - POSTGRES_USER=admin123
+      - POSTGRES_HOST=db
+    depends_on:
+      - web
+      - redis
+      - celery
+      - db
+
+
+  redis:
+    image: redis
+
+
+  flower:
+    image: killka1997/autodom-img
+   
+    command: celery -A Autodom flower --address=0.0.0.0 --port=5566
+    ports:
+     - 5566:5566
+    environment:
+      - DJANGO_SETTINGS_MODULE=Autodom.settings
+      - BROKER_URL=redis://redis:6379
+      - RESULT_BACKEND=redis://redis:6379
+      - POSTGRES_PASSWORD=qwerty1234
+      - POSTGRES_USER=admin123
+      - POSTGRES_HOST=db
+    depends_on:
+      - celery
+      - redis
+
+  db:
+      image: postgres
+    
+      expose:
+        - 5432
+      volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      environment:
+      - POSTGRES_PASSWORD=qwerty1234
+      - POSTGRES_USER=admin123
+      - POSTGRES_HOST=db
+
+  nginx:
+      build: ./nginx
+      ports:
+        - 80:80
+      volumes:
+      - static_volume:/home/app/web/staticfiles/:rw
+      depends_on:
+        - web
+
+volumes:
+  static_volume:
+    driver: local
+  postgres_data:
+    driver: local

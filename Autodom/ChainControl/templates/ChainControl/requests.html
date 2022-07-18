@@ -1,0 +1,39 @@
+{% extends 'ChainControl/index.html' %}
+
+{% block title %}
+Заявки на согласование
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        btn = document.getElementById('request_nav').getElementsByClassName('active');
+        $('#content').load(btn[0].value);
+    });
+    function request_nav(btn) {
+        btns = document.getElementById('request_nav').querySelectorAll('button.active');
+        btns.forEach(function (el) {
+            el.classList.remove('active');
+        })
+        $('#content').load(btn.value);
+        btn.classList.add('active');
+    }
+</script>
+{% endblock %}
+
+{% block descr %}
+
+<div id="request_nav" class="btn-group start-50 translate-middle-x" role="group" aria-label="Basic example">
+  <button onclick="request_nav(this)" id="requests_for_approval" type="button" class="btn btn-primary active" value="{% url 'requests_for_approval' %}">Заявки на согласование</button>
+  <button onclick="request_nav(this)" id="requests_all" type="button" class="btn btn-primary" value="{% url 'requests_all' %}">Все заявки</button>
+  <button onclick="request_nav(this)" id="requests_my_requests" type="button" class="btn btn-primary" value="{% url 'requests_my_requests' %}">Мои заявки</button>
+</div>
+{% endblock %}
+
+{% block body %}
+<div id="content" class="container-fluid">
+    
+</div>
+
+
+{% endblock %}

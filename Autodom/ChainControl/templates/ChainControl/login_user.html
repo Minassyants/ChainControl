@@ -1,0 +1,55 @@
+
+{% extends 'ChainControl/index.html' %}
+
+
+{% block title %}
+Войти
+{% endblock %}
+
+{% block descr %}
+<p class="h1 text-center">
+                Войти
+            </p>
+
+
+{% endblock %}
+
+{% block body %}
+     {% if form.errors %}
+<p>Your username and password didn't match. Please try again.</p>
+        {% endif %}
+
+<div class="d-flex justify-content-center ">
+       
+
+{% if user.is_authenticated %}
+
+    {% if next %}
+    
+    Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.
+    
+    {% endif %}
+
+{% else %}
+   
+        <form action="" method="post" class="p-3 border border-primary rounded">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_username" class="form-label">Username</label>
+                {{ form.username }}
+            </div>
+            <div class="mb-3">
+                <label for="id_password" class="form-label">Password</label>
+                {{ form.password }}
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    
+{% endif %}
+</div>
+
+
+
+{% endblock %}
+   
