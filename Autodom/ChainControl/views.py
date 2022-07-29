@@ -12,6 +12,11 @@ from .models import Request, Approval
 
 import Autodom.integ_1C as integ_1C
 
+from pwa_webpush import send_group_notification
+
+
+
+
 @login_required
 def index(request):
     #return render(request,'ChainControl/index.html')
@@ -22,7 +27,8 @@ def index(request):
 @login_required
 def requests(request):
     cur_user = request.user
-    return render(request,'ChainControl/requests.html')
+    webpush = {"group": 'name' }
+    return render(request,'ChainControl/requests.html',{'webpush':webpush})
 
 @login_required
 def requests_for_approval(request):
@@ -32,6 +38,11 @@ def requests_for_approval(request):
 
 @login_required
 def requests_all(request):
+    
+    payload = {"head": "Welcome!", "body": "Hello World"}
+
+    send_group_notification(group_name="name", payload=payload, ttl=1000)
+
     requests_list = Request.objects.all()
     return render(request,'ChainControl/requests_all.html',{'requests':requests_list})
 

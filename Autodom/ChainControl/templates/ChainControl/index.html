@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 {% load static %}
+{% load pwa_webpush %}
 <html style="font-size: 16px;">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
-
+    {% progressive_web_app_meta %}
+    {% webpush_header %}
     <title>
     {% block title %}{% endblock %}
     </title>
@@ -58,7 +60,7 @@
     <main class="flex-shrink-0 mb-1">
         <div class="container-fluid">
 
-           
+           {% webpush_button %}
                 {% block descr%} {% endblock%}
             
             <hr />

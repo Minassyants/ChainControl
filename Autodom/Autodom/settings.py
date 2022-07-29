@@ -25,7 +25,7 @@ SECRET_KEY = '33079540-1038-475c-84b2-bc6b03a6d221'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0","localhost"]
+ALLOWED_HOSTS = ["0.0.0.0","localhost","127.0.0.1","env-2591628.jcloud.kz"]
 
 # Application references
 # https://docs.djangoproject.com/en/2.1/ref/settings/#std:setting-INSTALLED_APPS
@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_beat',
-    'ChainControl.apps.ChaincontrolConfig'
+    'ChainControl.apps.ChaincontrolConfig',
+    'pwa_webpush',
 ]
 
 # Middleware framework
@@ -80,18 +81,18 @@ WSGI_APPLICATION = 'Autodom.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.environ.get("POSTGRES_USER"),
-        #'USER': os.environ.get("POSTGRES_USER"),
-        #'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
-        #'HOST': os.environ.get("POSTGRES_HOST"),
-        #'PORT': 5432,
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'admin',
-        'USER': 'admin',
-        'PASSWORD': 'admin',
-        'HOST': 'localhost',
+        'NAME': os.environ.get("POSTGRES_USER"),
+        'USER': os.environ.get("POSTGRES_USER"),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
+        'HOST': os.environ.get("POSTGRES_HOST"),
         'PORT': 5432,
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': 'admin',
+        #'USER': 'admin',
+        #'PASSWORD': 'admin',
+        #'HOST': 'localhost',
+        #'PORT': 5432,
     }
 }
 
@@ -156,3 +157,36 @@ EMAIL_PORT = '465'
 EMAIL_HOST_USER = 'info@minassyants.kz'
 EMAIL_HOST_PASSWORD = 'SyIatpOYi~33'
 EMAIL_USE_SSL = True
+
+
+#PWA settings
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'serviceworker.js')
+PWA_APP_NAME = 'My App'
+PWA_APP_DESCRIPTION = "My app description"
+PWA_APP_THEME_COLOR = '#0A0302'
+PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '',
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/CC'
+PWA_APP_DEBUG_MODE = True
+#PWA_APP_ICONS = [
+#    {
+#        'src': '/static/images/my_app_icon.png',
+#        'sizes': '160x160'
+#    }
+#]
+#PWA_APP_SPLASH_SCREEN = [
+#    {
+#        'src': '/static/images/icons/splash-640x1136.png',
+#        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
+#    }
+#]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en-US'
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": "BOzJwR_LqNx6oQwX76RSPi34Oeu4yt1bpl6IZBGYQ_XAqlI6YODmVFo1ju9pwZhj--5NnrzerOwJgkGnP-BlnZ0",
+    "VAPID_PRIVATE_KEY":"bwteYyg5Jf6NRaQSpR7RTcbSGZndWP632nMpMW85ZXI",
+    "VAPID_ADMIN_EMAIL": "killka1997@gmail.com"
+}
