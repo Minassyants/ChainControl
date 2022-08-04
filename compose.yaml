@@ -16,6 +16,9 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - LETSENCRYPT_HOST=jelastic.minassyants.kz
+      - VIRTUAL_HOST=jelastic.minassyants.kz
+      - VIRTUAL_PORT=8000
     depends_on:
       - redis
       - db
@@ -90,14 +93,29 @@ services:
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
 
-  nginx:
-      build: ./nginx
-      ports:
-        - 80:80
-      volumes:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/vhost.d
+      - /etc/nginx/certs
+      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/default_location:/etc/nginx/vhost.d/default_location
       - static_volume:/home/app/web/staticfiles/:rw
-      depends_on:
-        - web
+ 
+  ssl-generator:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+        
+
 
 volumes:
   static_volume:

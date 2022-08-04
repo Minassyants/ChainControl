@@ -1,6 +1,8 @@
+from random import choices
+from unittest.util import _MAX_LENGTH
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.utils.translation import gettext_lazy as _
 
 
 class Role(models.Model):
@@ -91,6 +93,17 @@ class Request(models.Model):
     sum = models.FloatField(verbose_name = 'Сумма')
     comment = models.TextField(verbose_name ='Комментарий',max_length = 200)
     is_closed = models.BooleanField(verbose_name='Статус заявки',default = False)
+    
+    class StatusTypes(models.TextChoices):
+        OPEN = 'OP', _('Открыта')
+        ON_APPROVAL = 'OA', _('На согласовании')
+        APPROVED = 'AP', _('Согласована')
+        ON_REWORK = 'OR', _('На доработке')
+        CANCELED = 'CA', _('Отменена')
+        DONE = 'DO', _('Выполнена')
+
+    status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.OPEN)
+        
 
     def __str__(self):
         return self.client.name + ", "+ str(self.complete_before)+", "+str(self.sum)
