@@ -1,4 +1,4 @@
-#!d:\autodomapp\autodom\env\scripts\python.exe
+#!D:\Projects VS\Minassyants\ChainControl\Autodom\env\Scripts\python.exe
 # When the django-admin.py deprecation ends, remove this script.
 import warnings
 

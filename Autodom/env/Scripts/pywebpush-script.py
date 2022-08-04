@@ -1,4 +1,4 @@
-#!D:\AutodomApp\Autodom\env\Scripts\python.exe
+#!"D:\Projects VS\Minassyants\ChainControl\Autodom\env\Scripts\python.exe"
 # EASY-INSTALL-ENTRY-SCRIPT: 'pywebpush==1.6.0','console_scripts','pywebpush'
 __requires__ = 'pywebpush==1.6.0'
 import re

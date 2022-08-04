@@ -1,4 +1,4 @@
-#!D:\AutodomApp\Autodom\env\Scripts\python.exe
+#!"D:\Projects VS\Minassyants\ChainControl\Autodom\env\Scripts\python.exe"
 # EASY-INSTALL-ENTRY-SCRIPT: 'autobahn==22.6.1','console_scripts','xbrnetwork'
 __requires__ = 'autobahn==22.6.1'
 import re
