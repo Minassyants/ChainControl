@@ -54,6 +54,9 @@
     </Compile>
     <Compile Include="ChainControl\migrations\__init__.py" />
     <Compile Include="ChainControl\models.py" />
+    <Compile Include="ChainControl\periodic_tasks.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ChainControl\signalevents.py">
       <SubType>Code</SubType>
     </Compile>

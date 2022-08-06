@@ -11,4 +11,6 @@ urlpatterns = [
     path('CC/requests_for_approval', views.requests_for_approval, name="requests_for_approval"),
     path('CC/requests_all', views.requests_all, name="requests_all"),
     path('CC/requests_my_requests', views.requests_my_requests, name="requests_my_requests"),
+    path('api/get_contracts',views.get_contracts,  name="get_contracts"),
+    path('api/get_bank_accounts',views.get_bank_accounts,  name="get_bank_accounts"),
     ]

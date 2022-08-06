@@ -7,19 +7,18 @@
 {% block scripts %}
 <script type="text/javascript">
     $(document).ready(function () {
-      $('select').selectize({
-          sortField: 'text'
-          
-         
-      });
-  });
+
+        $('select').selectize({
+            sortField: 'text'
+        });
+    });
 </script>
 {% endblock %}
 
 {% block descr %}
 <p class="h1 text-center">
-                Создать заявку
-            </p>
+    Создать заявку
+</p>
 
 {% endblock %}
 
@@ -27,9 +26,10 @@
 
 <form action="" method="post" class="row g-3 p-3 border border-primary rounded" enctype="multipart/form-data">
     {% csrf_token %}
+    {{ form.status.as_hidden}}
     <div class="col-12">
         <fieldset>
-        
+
             <div class="col-md-8">
                 <label for="inputuser" class="form-label">Заявитель</label>
                 {{form.user}}
@@ -41,6 +41,10 @@
             <div class="col-md-8">
                 <label for="inputcomplete_before" class="form-label">Срок выполнения</label>
                 {{form.complete_before}}
+            </div>
+            <div class="col-md-8">
+                <label for="inputpayment_type" class="form-label">Тип оплаты</label>
+                {{form.payment_type}}
             </div>
         </fieldset>
     </div>
@@ -99,24 +103,43 @@
         </fieldset>
     </div>
     <div class="col-12">
-    <div class="row g-3">
-    {{ addfiles.non_form_errors }}
-    {{ addfiles.management_form }}
-    {% for f in addfiles %}
-        <div class="col-md-8">
-            {{ f.file }}
-            
-            {% if addfiles.can_delete %}
+        <div class="row g-3">
+            {{ addfiles.non_form_errors }}
+            {{ addfiles.management_form }}
+            {% for f in addfiles %}
+            <div class="col-md-8">
+                {{ f.file }}
+
+                {% if addfiles.can_delete %}
                 {{ f.DELETE }} {{ f.DELETE.label }}
-            {% endif %}
-            
+                {% endif %}
+
+            </div>
+            {% endfor %}
         </div>
-    {% endfor %}
     </div>
-     </div>
     <div class="col-12">
-    <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </div>
 </form>
 
+<script type="text/javascript">
+    $("#id_contract").selectize()[0].selectize.clearOptions();
+    $("#id_bank_account").selectize()[0].selectize.clearOptions();
+    $("#id_client").on("change", function () {
+        $.getJSON("{% url 'get_contracts' %}?id=" + $(this).val(), function (Contracts) {
+            $("#id_contract").selectize()[0].selectize.clearOptions();
+            $("#id_contract").selectize()[0].selectize.load(function (callback) {
+                callback(Contracts);
+            });
+        });
+        $.getJSON("{% url 'get_bank_accounts' %}?id=" + $(this).val(), function (Bank_accounts) {
+            $("#id_bank_account").selectize()[0].selectize.clearOptions();
+            $("#id_bank_account").selectize()[0].selectize.load(function (callback) {
+                callback(Bank_accounts);
+            });
+        });
+    });
+
+</script>
 {% endblock %}

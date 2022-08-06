@@ -3,7 +3,7 @@ from unittest.util import _MAX_LENGTH
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-
+from tinymce.models import HTMLField
 
 class Role(models.Model):
     name= models.TextField(verbose_name='Наименование',max_length = 100,blank=True,null=True)
@@ -92,7 +92,7 @@ class Request(models.Model):
     AVR_date = models.DateField(verbose_name='Дата оказания услуг/передачи товара')
     sum = models.FloatField(verbose_name = 'Сумма')
     comment = models.TextField(verbose_name ='Комментарий',max_length = 200)
-    is_closed = models.BooleanField(verbose_name='Статус заявки',default = False)
+    
     
     class StatusTypes(models.TextChoices):
         OPEN = 'OP', _('Открыта')
@@ -102,8 +102,8 @@ class Request(models.Model):
         CANCELED = 'CA', _('Отменена')
         DONE = 'DO', _('Выполнена')
 
-    status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.OPEN)
-        
+    status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.ON_APPROVAL)
+    
 
     def __str__(self):
         return self.client.name + ", "+ str(self.complete_before)+", "+str(self.sum)
@@ -116,7 +116,7 @@ class Request(models.Model):
 class Approval(models.Model):
     user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True,)
     role = models.ForeignKey(Role,models.SET_NULL,blank=True,null=True,)
-    is_approved = models.BooleanField(verbose_name = 'Согласована',default = False)
+    new_status = models.CharField(verbose_name='Установленный статус', max_length = 2, choices=Request.StatusTypes.choices, default=Request.StatusTypes.ON_APPROVAL)
     order = models.IntegerField(verbose_name = 'Порядок согласования')
     request = models.ForeignKey(Request,on_delete = models.CASCADE)
 
@@ -139,7 +139,13 @@ class Additional_file(models.Model):
     request_1= models.ForeignKey(Request,on_delete = models.CASCADE)
     file = models.FileField(verbose_name='Приложение')
 
+class Email_templates(models.Model):
+    class Email_types(models.TextChoices):
+        INITIAL_NOTIFICATION = '1', _('Создана новая заявка')
+        DONE_NOTIFICATION = '100', _('Заявка выполнена')
 
-
+    email_type = models.CharField(verbose_name='Тип шаблона', max_length=3,choices= Email_types.choices,default=Email_types.INITIAL_NOTIFICATION,unique=True)
+    text = HTMLField()
+    subject = models.CharField(verbose_name='Тема письма', max_length=100,blank=False,null=False)
     
     

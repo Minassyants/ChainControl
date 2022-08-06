@@ -24,9 +24,9 @@ from . import views
 urlpatterns = [
 
     path('admin/', admin.site.urls),
-    path('task/', views.task,name = 'task'),
     path('',include('ChainControl.urls')),
     path('',include('django.contrib.auth.urls')),
-    path('',include('pwa_webpush.urls'))
+    path('',include('pwa_webpush.urls')),
+    path('tinymce/', include('tinymce.urls')),
 ]
 

@@ -6,10 +6,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
 from django import forms
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, F
 from .forms import RequestForm, AdditionalFileInlineFormset
-from .models import Request, Approval
-
+from .models import Request, Approval, Contract, Bank_account
+from django.http import JsonResponse
 import Autodom.integ_1C as integ_1C
 
 from pwa_webpush import send_group_notification
@@ -33,7 +33,7 @@ def requests(request):
 @login_required
 def requests_for_approval(request):
     cur_user = request.user
-    requests_list = Request.objects.filter(Q(approval__is_approved=False) & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
+    requests_list = Request.objects.filter(Q(approval__new_status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
     return render(request,'ChainControl/requests_for_approval.html',{'requests':requests_list})
 
 @login_required
@@ -60,6 +60,7 @@ def createRequest(request):
         # check whether it's valid:
         if form.is_valid() :
             obj = form.save(commit = False)
+            obj.user = request.user
             form.save()
             files = addfiles.save(commit = False)
             for file in files:
@@ -69,11 +70,14 @@ def createRequest(request):
             return redirect('index')
     else:
         now = datetime.datetime.now()
+        
         form = RequestForm(initial={
             'user':request.user,
             'complete_before': now+datetime.timedelta( days= 3),
             'invoice_date':now,
-            'AVR_date':now})
+            'AVR_date':now,
+            'status':Request.StatusTypes.ON_APPROVAL.value,
+            })
        
         addfiles = AdditionalFileInlineFormset()
         return render(request,"ChainControl/createRequest.html",{"form":form,
@@ -108,3 +112,17 @@ def login_user(request):
 def logout_user(request):
     logout(request)
     return redirect('login_user')
+
+@login_required
+def get_contracts(request):
+    if request.method == 'GET':
+        id = request.GET['id']
+        els = list(Contract.objects.filter(client__id = id).values('id','name').annotate(value=F('id'),text=F('name')))
+        return JsonResponse(els, safe=False)
+
+@login_required
+def get_bank_accounts(request):
+    if request.method == 'GET':
+        id = request.GET['id']
+        els = list(Bank_account.objects.filter(client__id = id).values('id','account_number').annotate(value=F('id'),text=F('account_number')))
+        return JsonResponse(els, safe=False)

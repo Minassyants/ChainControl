@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'ChainControl.apps.ChaincontrolConfig',
     'pwa_webpush',
+    'tinymce',
 ]
 
 # Middleware framework

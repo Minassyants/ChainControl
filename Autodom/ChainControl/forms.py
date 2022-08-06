@@ -25,7 +25,7 @@ class RequestForm(forms.ModelForm):
 
     class Meta:
         model = models.Request
-        exclude = ('is_closed',)
+        fields = '__all__'
         widgets = {
             'user' : forms.Select(attrs={'disabled':'true'}),
             'type' : forms.Select(),

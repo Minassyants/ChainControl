@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates
 
 class OrderingInline(admin.TabularInline):
     model = Ordering
@@ -60,3 +60,4 @@ admin.site.register(Ordering)
 admin.site.register(Payment_type)
 admin.site.register(Additional_file)
 admin.site.register(Role)
+admin.site.register(Email_templates)

@@ -1,25 +1,28 @@
 from celery import shared_task
 from django.core.mail import send_mail
-from ChainControl.models import Approval
+from django.template import Template, Context
+from django.template.loader import render_to_string, get_template
+from ChainControl.models import Approval, Email_templates
 from . import integ_1C
-
+from Autodom import settings
 @shared_task
-def add(x, y):
-    return x + y
+def send_initial_notification(request_id,Email_Type):
 
-@shared_task
-def sendemail(request_id):
-
-    els = Approval.objects.filter(request__id=request_id)
-    mail_list = []
-    for el in els:
-        mail_list.append(el.user.email)
+    el = Approval.objects.filter(request__id=request_id,new_status = 'OA')
+    el = el.order_by('order')[:1]
+    el = el.get()
+    mail_list = [el.user.email,el.request.user.email]
+    email_template = Email_templates.objects.get(email_type=Email_Type) #TODO: exception
+    
+    email_text = Template(email_template.text).render(Context({"request":el.request}))
+    email_subject = email_template.subject
 
     send_mail(
-    'Subject here',
-    'Here is the message.',
-    'info@minassyants.kz',
+    email_subject,
+    email_text,
+    settings.EMAIL_HOST_USER,
     mail_list,
+    html_message=email_text,
     fail_silently=False,
 )
     return 'done'
