@@ -1,5 +1,4 @@
-from random import choices
-from unittest.util import _MAX_LENGTH
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
@@ -80,6 +79,7 @@ class Request_type(models.Model):
 
 class Request(models.Model):
     user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True,)
+    date = models.DateField(verbose_name='Дата создания',default=datetime.now,blank=True)
     type = models.ForeignKey(Request_type, on_delete = models.CASCADE)
     payment_type = models.ForeignKey(Payment_type, on_delete = models.CASCADE)
     client = models.ForeignKey(Client, on_delete = models.CASCADE)

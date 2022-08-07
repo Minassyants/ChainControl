@@ -1,17 +1,18 @@
-import datetime
-from django.shortcuts import render, redirect
+from datetime import datetime, timedelta
+
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
 from django import forms
 from django.contrib import messages
-from django.db.models import Q, F
+from django.db.models import Q, F, Value, CharField
 from .forms import RequestForm, AdditionalFileInlineFormset
-from .models import Request, Approval, Contract, Bank_account
+from .models import Request, Approval, Contract, Bank_account, Ordering
 from django.http import JsonResponse
 import Autodom.integ_1C as integ_1C
-
+from . import utils
 from pwa_webpush import send_group_notification
 
 
@@ -69,11 +70,11 @@ def createRequest(request):
             messages.success(request,'Заявка создана')
             return redirect('index')
     else:
-        now = datetime.datetime.now()
-        
+        now = datetime.now()
         form = RequestForm(initial={
             'user':request.user,
-            'complete_before': now+datetime.timedelta( days= 3),
+            'date':now.date,
+            'complete_before': now+timedelta( days= 3),
             'invoice_date':now,
             'AVR_date':now,
             'status':Request.StatusTypes.ON_APPROVAL.value,
@@ -82,6 +83,14 @@ def createRequest(request):
         addfiles = AdditionalFileInlineFormset()
         return render(request,"ChainControl/createRequest.html",{"form":form,
                                                                  "addfiles":addfiles})
+
+def request_item(request, id):
+    el = get_object_or_404(Request,id=id)
+    if request.method == 'POST':
+        form = RequestForm(request.POST, instance=el)
+    else:
+        form = RequestForm(instance=el)
+    return render(request,'ChainControl/request_item.html',{"form":form})
 
 def login_user(request):
     if request.method == 'POST':
@@ -126,3 +135,23 @@ def get_bank_accounts(request):
         id = request.GET['id']
         els = list(Bank_account.objects.filter(client__id = id).values('id','account_number').annotate(value=F('id'),text=F('account_number')))
         return JsonResponse(els, safe=False)
+
+@login_required
+def get_ordering_for_new_request(request):
+    if request.method == 'GET':
+        id = request.GET['id']
+        els = Ordering.objects.filter(request_type__id = id).order_by('order')
+        ordering = []
+        for el in els:
+            if el.user != None:
+                ordering.append(el.user.first_name)
+            else:
+                ordering.append(el.role.name)
+        return render(request,'ChainControl/ordering_for_new_request.html',{"ordering":ordering})
+
+def get_approval_status(request):
+    if request.method == 'GET':
+        id = request.GET['id']
+        els = Approval.objects.filter(request__id = id).order_by('order').annotate(color=Value('xxx', output_field=CharField()))
+        utils.set_approval_color(els)
+        return render(request,'ChainControl/approval_status.html',{"els":els})

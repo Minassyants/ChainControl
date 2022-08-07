@@ -4,9 +4,12 @@ from django.forms import inlineformset_factory
 
 class DateInput(forms.DateInput):
     input_type = 'date'
+    input_formats = ['%d.%m.%y']
 
 class RequestForm(forms.ModelForm):
 
+    date = forms.DateField(widget=DateInput(attrs={'class' : 'form-control',
+                                                 }))
     complete_before = forms.DateField(widget=DateInput(attrs={'class' : 'form-control',
                                                  }))
     invoice_number = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control',
@@ -34,6 +37,10 @@ class RequestForm(forms.ModelForm):
             'contract' : forms.Select(),
             'bank_account' : forms.Select(),
             'sum' : forms.NumberInput(attrs={'class' : 'form-control',}),
+            'date' : forms.DateInput(format='%Y-%m-%d'),
+            'complete_before' : forms.DateInput(format='%Y-%m-%d'),
+            'invoice_date' : forms.DateInput(format='%Y-%m-%d'),
+            'AVR_date' : forms.DateInput(format='%Y-%m-%d'),
             }
        
 AdditionalFileInlineFormset = inlineformset_factory(models.Request,models.Additional_file, widgets= {

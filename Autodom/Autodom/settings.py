@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'Autodom.urls'
@@ -91,9 +92,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'postgrespw',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
-        'PORT': 49153,
+        'PORT': 8111,
     }
 }
 
@@ -116,12 +117,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Asia/Almaty'
 USE_I18N = True
-USE_L10N = True
-USE_TZ = True
 
+USE_TZ = True
+DATE_FORMAT = 'Y-m-d'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "ChainControl/static"),
 )

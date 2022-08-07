@@ -1,7 +1,7 @@
 {% extends 'ChainControl/index.html' %}
 
 {% block title %}
-Создать заявку
+Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 {% endblock %}
 
 {% block scripts %}
@@ -17,7 +17,7 @@
 
 {% block descr %}
 <p class="h1 text-center">
-    Создать заявку
+    Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 </p>
 
 {% endblock %}
@@ -27,7 +27,6 @@
 <form action="" method="post" class="row g-3 p-3 border border-primary rounded" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.status.as_hidden}}
-    {{ form.date.as_hidden}}
     <div class="container">
         <div class="row">
             <div class="col-10">
@@ -37,11 +36,13 @@
 
                             <div class="col-12">
                                 <label for="inputuser" class="form-label">Заявитель</label>
-                                {{form.user}}
+                                <strong>{{form.instance.user.first_name}}</strong>
+                                {{form.user.as_hidden}}
                             </div>
                             <div class="col-12">
                                 <label for="inputtype" class="form-label">Вид заявки</label>
-                                {{form.type}}
+                                <strong>{{form.instance.type}}</strong>
+                                {{form.type.as_hidden}}
                             </div>
                             <div class="col-12 d-md-none">
                                 <div class="accordion accordion-flush" id="accordionExample1">
@@ -52,7 +53,7 @@
                                             </button>
                                         </h2>
                                         <div id="collapseOne1" class="accordion-collapse collapse" aria-labelledby="headingOne1" data-bs-parent="#accordionExample1">
-                                            <div class="accordion-body ordering_for_new_request">
+                                            <div class="accordion-body approval-status">
 
                                             </div>
                                         </div>
@@ -161,12 +162,12 @@
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                            <div class="accordion-body ordering_for_new_request">
-                                
+                            <div class="accordion-body approval-status">
+
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -175,6 +176,7 @@
 
 <script type="text/javascript">
     $("#id_type").oldValue = $("#id_type").val();
+
     $("#id_contract").selectize()[0].selectize.clearOptions();
     $("#id_bank_account").selectize()[0].selectize.clearOptions();
     $("#id_client").on("change", function () {
@@ -194,16 +196,15 @@
         });
     });
     $("#id_type").on("change", function () {
-        
-        if ($(this).oldValue != $(this).val())
-        {
-            $(".ordering_for_new_request").append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
-            $(".ordering_for_new_request").load("{% url 'get_ordering_for_new_request' %}?id=" + $(this).val());
-            
+
+        if ($(this).oldValue != $(this).val()) {
+            $(".approval-status").append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+            $(".approval-status").load("{% url 'get_approval_status' %}?id=" + $(this).val());
+
             $(this).oldValue = $(this).val();
         }
-        
+
     });
-   
+    $(".approval-status").load("{% url 'get_approval_status' %}?id={{ form.instance.id }}");
 </script>
 {% endblock %}
