@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from django.forms import modelformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required, permission_required
@@ -8,11 +8,15 @@ from django.core.exceptions import PermissionDenied
 from django import forms
 from django.contrib import messages
 from django.db.models import Q, F, Value, CharField
-from .forms import RequestForm, AdditionalFileInlineFormset
-from .models import Request, Approval, Contract, Bank_account, Ordering
+from django.forms import inlineformset_factory
 from django.http import JsonResponse
 import Autodom.integ_1C as integ_1C
+from .admin import RequestAdmin
+from .forms import RequestForm, AdditionalFileInlineFormset
+from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file
 from . import utils
+
+
 from pwa_webpush import send_group_notification
 
 
@@ -56,19 +60,23 @@ def requests_my_requests(request):
 @login_required
 def createRequest(request):
     if request.method == 'POST':
-        form = RequestForm(request.POST)
+        form = RequestForm(request.POST)        
         addfiles = AdditionalFileInlineFormset(request.POST,request.FILES, instance=form.instance)
         # check whether it's valid:
         if form.is_valid() :
             obj = form.save(commit = False)
             obj.user = request.user
             form.save()
-            files = addfiles.save(commit = False)
-            for file in files:
-                file.request_1 = obj
-                file.save()
-            messages.success(request,'Заявка создана')
-            return redirect('index')
+            if addfiles.is_valid():
+                files = addfiles.save(commit = False)
+                for file in files:
+                    file.request_1 = obj
+                    file.save()
+                messages.success(request,'Заявка создана')
+                return redirect('index')
+            else:
+                messages.warning(request,'Заявка создана, но файлы не загружены')
+                return redirect('index')
     else:
         now = datetime.now()
         form = RequestForm(initial={
@@ -79,18 +87,45 @@ def createRequest(request):
             'AVR_date':now,
             'status':Request.StatusTypes.ON_APPROVAL.value,
             })
-       
+        
         addfiles = AdditionalFileInlineFormset()
         return render(request,"ChainControl/createRequest.html",{"form":form,
-                                                                 "addfiles":addfiles})
+                                                                 "addfiles":addfiles,
+                                                                 })
 
 def request_item(request, id):
     el = get_object_or_404(Request,id=id)
+    modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
     if request.method == 'POST':
         form = RequestForm(request.POST, instance=el)
+        addfiles = modelformset(request.POST,request.FILES,initial=[{
+            'request_1':el,},])
+        if form.instance.user != request.user:
+            messages.warning(request,'Заявка редактируется только заявителем')
+        else:
+            if form.is_valid():
+                obj = form.save(commit = False)
+                obj.user = request.user
+                form.save()
+                if addfiles.is_valid():
+                    files = addfiles.save(commit = False)
+                    for file in addfiles.deleted_objects:
+                        file.delete()
+                    for file in files:
+                        file.request_1 = obj
+                        file.save()
+                    messages.success(request,'Заявка обновлена')
+                    return redirect('index')
+                else:
+                    messages.warning(request,'Заявка обновлена, но файлы не изменены')
+                    return redirect('index')
     else:
-        form = RequestForm(instance=el)
-    return render(request,'ChainControl/request_item.html',{"form":form})
+        form = RequestForm(None,instance=el)
+        addfiles = modelformset(queryset=Additional_file.objects.filter(request_1=el.id),initial=[{
+            'request_1':el,},])
+    return render(request,'ChainControl/request_item.html',{"form":form,
+                                                                "addfiles":addfiles,
+                                                                })
 
 def login_user(request):
     if request.method == 'POST':

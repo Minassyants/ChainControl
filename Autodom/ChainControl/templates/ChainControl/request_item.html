@@ -1,6 +1,7 @@
 {% extends 'ChainControl/index.html' %}
 
 {% block title %}
+{{ meida }}
 Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 {% endblock %}
 
@@ -27,6 +28,7 @@
 <form action="" method="post" class="row g-3 p-3 border border-primary rounded" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.status.as_hidden}}
+    {{ form.date.as_hidden}}
     <div class="container">
         <div class="row">
             <div class="col-10">
@@ -128,16 +130,19 @@
                         </div>
                     </fieldset>
                 </div>
+               
                 <div class="row">
                     <div class="col-12 g-3">
-
                         <div class="row g-3">
                             {{ addfiles.non_form_errors }}
                             {{ addfiles.management_form }}
+                            
                             {% for f in addfiles %}
                             <div class="col-md-12">
-                                {{ f.file }}
-
+                                {{ f.id.as_hidden }}
+                                {{ f.request_1.as_hidden }}
+                                {{ f.orginal}}
+                                {{ f.file}}
                                 {% if addfiles.can_delete %}
                                 {{ f.DELETE }} {{ f.DELETE.label }}
                                 {% endif %}
@@ -147,6 +152,7 @@
                         </div>
                     </div>
                 </div>
+               
                 <div class="row pt-2">
                     <div class="col-12 ps-2">
                         <button type="submit" class="btn btn-primary">Submit</button>

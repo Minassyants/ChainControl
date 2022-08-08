@@ -46,4 +46,4 @@ class RequestForm(forms.ModelForm):
 AdditionalFileInlineFormset = inlineformset_factory(models.Request,models.Additional_file, widgets= {
     "file" : forms.FileInput(attrs = {'class' : 'form-control form-control-sm'})
     },
-                                                   extra=3,max_num=5,fields= ['file'], can_delete= False)
+                                                   extra=3,max_num=5,fields='__all__', can_delete= True)
