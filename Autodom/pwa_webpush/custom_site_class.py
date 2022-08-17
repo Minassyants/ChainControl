@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit, parse_qs
 
 from django.urls import reverse
-
+import Autodom.settings as settings
 
 class CustomSite(object):
     protocol = "http"
@@ -21,7 +21,7 @@ class CustomSite(object):
 
         url = urlsplit(request_uri)
 
-        self.protocol = url.scheme
+        self.protocol = url.scheme if settings.DEBUG==True else 'https'
         self.domain = url.hostname
         self.port = url.port
         self.request_path = url.path

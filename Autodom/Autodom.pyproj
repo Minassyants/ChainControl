@@ -54,6 +54,9 @@
     </Compile>
     <Compile Include="ChainControl\migrations\__init__.py" />
     <Compile Include="ChainControl\models.py" />
+    <Compile Include="ChainControl\russian_strings.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ChainControl\periodic_tasks.py">
       <SubType>Code</SubType>
     </Compile>
@@ -91,6 +94,7 @@
     <Compile Include="pwa_webpush\__init__.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ChainControl\templates\ChainControl\approval_form.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_status.html" />
     <Content Include="ChainControl\templates\ChainControl\createRequest.html" />
     <Content Include="ChainControl\templates\ChainControl\index.html" />
@@ -100,7 +104,9 @@
     <Content Include="ChainControl\templates\ChainControl\requests_all.html" />
     <Content Include="ChainControl\templates\ChainControl\requests_for_approval.html" />
     <Content Include="ChainControl\templates\ChainControl\requests_my_requests.html" />
+    <Content Include="ChainControl\templates\ChainControl\requests_to_be_done.html" />
     <Content Include="ChainControl\templates\ChainControl\request_item.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_search_form.html" />
     <Content Include="pwa_webpush\migrations\__pycache__\0001_initial.cpython-37.pyc" />
     <Content Include="pwa_webpush\migrations\__pycache__\0002_auto_20220718_1750.cpython-37.pyc" />
     <Content Include="pwa_webpush\migrations\__pycache__\__init__.cpython-37.pyc" />

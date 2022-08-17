@@ -42,7 +42,8 @@ window.addEventListener('load', function() {
     if (!(reg.showNotification)) {
         // Show a message and activate the button
         messageBox.textContent = 'Showing Notification is not supported in your browser';
-        subBtn.textContent = 'Subscribe to Push Messaging';
+        //subBtn.textContent = 'Subscribe to Push Messaging123123';
+        subBtn.innerHTML = "<img src=\" /static/ChainControl/images/bell.svg\" />";
         messageBox.style.display = 'block';
         return;
     }
@@ -53,7 +54,8 @@ window.addEventListener('load', function() {
     if (Notification.permission === 'denied') {
       // Show a message and activate the button
       messageBox.textContent = 'The Push Notification is blocked from your browser.';
-      subBtn.textContent = 'Subscribe to Push Messaging';
+        //subBtn.textContent = 'Subscribe to Push Messaging123123';
+        subBtn.innerHTML = "<img src=\" /static/ChainControl/images/bell.svg\" />";
       subBtn.disabled = false;
       messageBox.style.display = 'block';
       return;  
@@ -63,7 +65,8 @@ window.addEventListener('load', function() {
     if (!('PushManager' in window)) {
       // Show a message and activate the button 
       messageBox.textContent = 'Push Notification is not available in the browser';
-      subBtn.textContent = 'Subscribe to Push Messaging';
+        //subBtn.textContent = 'Subscribe to Push Messaging123123';
+        subBtn.innerHTML = "<img src=\" /static/ChainControl/images/bell.svg\" />";
       subBtn.disabled = false;
       messageBox.style.display = 'block';
       return;  
@@ -172,7 +175,8 @@ function postSubscribeObj(statusType, subscription) {
         // Check the information is saved successfully into server
         if ((response.status == 201) && (statusType == 'subscribe')) {
           // Show unsubscribe button instead
-          subBtn.textContent = 'Unsubscribe to Push Messaging';
+          //subBtn.textContent = 'Unsubscribe to Push Messaging123123';
+          subBtn.innerHTML = "<img src=\" /static/ChainControl/images/bell-slash.svg\" />";
           subBtn.disabled = false;
           isPushEnabled = true;
           messageBox.textContent = 'Successfully subscribed for Push Notification';
@@ -189,7 +193,8 @@ function postSubscribeObj(statusType, subscription) {
                 subscription.unsubscribe()
                 .then(
                   function(successful) {
-                    subBtn.textContent = 'Subscribe to Push Messaging';
+                    //subBtn.textContent = 'Subscribe to Push Messaging123123';
+                    subBtn.innerHTML = "<img src=\" /static/ChainControl/images/bell.svg\" />";
                     messageBox.textContent = 'Successfully unsubscribed for Push Notification';
                     messageBox.style.display = 'block';
                     isPushEnabled = false;
@@ -200,7 +205,7 @@ function postSubscribeObj(statusType, subscription) {
             )
             .catch(
               function(error) {
-                subBtn.textContent = 'Unsubscribe to Push Messaging';
+                subBtn.textContent = 'Unsubscribe to Push Messaging123123';
                 messageBox.textContent = 'Error during unsubscribe from Push Notification';
                 messageBox.style.display = 'block';
                 subBtn.disabled = false;

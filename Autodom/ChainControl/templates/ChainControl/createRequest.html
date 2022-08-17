@@ -43,7 +43,7 @@
                                 <label for="inputtype" class="form-label">Вид заявки</label>
                                 {{form.type}}
                             </div>
-                            <div class="col-12 d-md-none">
+                            <div class="col-12 d-lg-none">
                                 <div class="accordion accordion-flush" id="accordionExample1">
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="headingOne1">
@@ -116,16 +116,24 @@
                     </div>
                 </div>
                 <div class="col-12">
+                    
                     <fieldset>
-                        <div class="col-md-12">
-                            <label for="inputsum" class="form-label">Сумма</label>
-                            {{form.sum}}
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="inputsum" class="form-label">Сумма</label>
+                                {{form.sum}}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="inputsum" class="form-label">Валюта</label>
+                                {{form.currency}}
+                            </div>
                         </div>
                         <div class="col-md-12">
                             <label for="inputcomment" class="form-label">Комментарий</label>
                             {{form.comment}}
                         </div>
                     </fieldset>
+
                 </div>
                 <div class="row">
                     <div class="col-12 g-3">
@@ -152,7 +160,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-2 d-none d-md-block">
+            <div class="col-2 d-none d-lg-block">
                 <div class="accordion accordion-flush" id="accordionExample">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingOne">
@@ -197,6 +205,7 @@
         
         if ($(this).oldValue != $(this).val())
         {
+            $(".ordering_for_new_request").empty();
             $(".ordering_for_new_request").append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
             $(".ordering_for_new_request").load("{% url 'get_ordering_for_new_request' %}?id=" + $(this).val());
             

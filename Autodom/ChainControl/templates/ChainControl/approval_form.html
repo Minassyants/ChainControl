@@ -1,0 +1,17 @@
+<form action="{% url 'get_approval_form' id=form.instance.id %}" method="post"  enctype="multipart/form-data">
+    {% csrf_token %}
+        <div class="row">
+
+            <div class="col-12">
+                <fieldset>
+                    {{ form }}
+                </fieldset>
+            </div>
+        </div>
+        
+        <div class="row pt-2">
+            <div class="col-12 ps-2">
+                <button type="submit" class="btn btn-warning">Изменить статус</button>
+            </div>
+        </div>
+</form>

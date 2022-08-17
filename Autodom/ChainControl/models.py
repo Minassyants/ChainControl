@@ -28,15 +28,16 @@ class Contract(models.Model):
     guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
     client = models.ForeignKey(Client,on_delete = models.CASCADE)
     name= models.TextField(verbose_name='Наименование',max_length = 200)
-    number = models.TextField(verbose_name='Номер договора',max_length = 20)
-    date = models.DateField(verbose_name='Дата договора')
-    start_date = models.DateField(verbose_name='Дата начала')
-    end_date = models.DateField(verbose_name = 'Дата окончания')
+    number = models.TextField(verbose_name='Номер договора',max_length = 20,blank=True,null=True)
+    date = models.DateField(verbose_name='Дата договора',blank=True,null=True)
+    start_date = models.DateField(verbose_name='Дата начала',blank=True,null=True)
+    end_date = models.DateField(verbose_name = 'Дата окончания',blank=True,null=True)
 
     def __str__(self):
         return self.name
 
 class Bank(models.Model):
+    guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
     name = models.TextField(verbose_name='Наименование',max_length = 200)
     BIK = models.TextField(verbose_name = 'БИК',max_length = 10)
 
@@ -45,9 +46,10 @@ class Bank(models.Model):
 
 
 class Currency(models.Model):
+    guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
     name = models.TextField(verbose_name='Наименование',max_length = 50)
-    code = models.TextField(verbose_name='Код валюты',max_length = 3)
-    code_str = models.TextField(verbose_name='Код валюты строкой', max_length = 3)
+    code = models.TextField(verbose_name='Код валюты',max_length = 3,blank=True,null=True)
+    code_str = models.TextField(verbose_name='Код валюты строкой', max_length = 3,blank=True,null=True)
 
     def __str__(self):
         return self.code_str
@@ -61,7 +63,7 @@ class Payment_type(models.Model):
 class Bank_account(models.Model):
     guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
     client = models.ForeignKey(Client,on_delete = models.CASCADE)
-    bank = models.ForeignKey(Bank,on_delete= models.CASCADE)
+    bank = models.ForeignKey(Bank,on_delete= models.CASCADE,null=True)
     currency = models.ForeignKey(Currency,on_delete = models.CASCADE)
     account_number = models.TextField(verbose_name = 'Номер счета',max_length = 100)
 
@@ -92,7 +94,7 @@ class Request(models.Model):
     AVR_date = models.DateField(verbose_name='Дата оказания услуг/передачи товара')
     sum = models.FloatField(verbose_name = 'Сумма')
     comment = models.TextField(verbose_name ='Комментарий',max_length = 200)
-    
+    currency = models.ForeignKey(Currency, on_delete = models.CASCADE,verbose_name='Валюта')
     
     class StatusTypes(models.TextChoices):
         OPEN = 'OP', _('Открыта')
@@ -121,7 +123,7 @@ class Approval(models.Model):
     request = models.ForeignKey(Request,on_delete = models.CASCADE)
 
     def __str__(self):
-        return str(self.request)+", "+str(self.role)+", "+str(self.is_approved)
+        return str(self.request)+", "+str(self.role)+", "+str(self.new_status)
 
 
 
@@ -142,10 +144,32 @@ class Additional_file(models.Model):
 class Email_templates(models.Model):
     class Email_types(models.TextChoices):
         INITIAL_NOTIFICATION = '1', _('Создана новая заявка')
+        WAITING_FOR_APPROVAL_NOTIFICATION = '10', _('Заявка ожидает согласования')
+        REWORKED_NOTIFICATION = '20', _('Заявка на доработке')
+        CANCELED_NOTIFICATION = '50', _('Заявка отменена')
+        APPROVED_NOTIFICATION = '70', _('Заявка согласована всеми участниками и ожидает исполнения')
         DONE_NOTIFICATION = '100', _('Заявка выполнена')
+        DAILY_APPROVAL_NOTIFICATION = '200', _('Ежедневное напоминание о необходимости согласования')
+        DAILY_EXECUTOR_NOTIFICATION = '210', _('Ежедневное напоминание о необходимости исполнения')
+        DEADLINE_PASSED_NOTIFICATION = '220', _('Напоминание о просроченных заявках')
 
     email_type = models.CharField(verbose_name='Тип шаблона', max_length=3,choices= Email_types.choices,default=Email_types.INITIAL_NOTIFICATION,unique=True)
-    text = HTMLField()
     subject = models.CharField(verbose_name='Тема письма', max_length=100,blank=False,null=False)
+    text = HTMLField(verbose_name='Текст письма')
+    
+    notification_subject = models.CharField(verbose_name='Заголовок уведомления', max_length=100,blank=False,null=False,default='123')
+    notification_text = models.CharField(verbose_name='Текст уведомления', max_length=100,blank=False,null=False,default='123')
+
+    def __str__(self):
+        return self.get_email_type_display()
     
     
+class History(models.Model):
+    request = models.ForeignKey(Request, on_delete= models.CASCADE)
+    date = models.DateTimeField(verbose_name='Дата события',default=datetime.now,blank=True)
+    user = models.ForeignKey(User,models.SET_NULL, null=True)
+    status = models.CharField(verbose_name='Статус', max_length = 2, choices=Request.StatusTypes.choices, blank=True, null=True)
+    comment = models.TextField(verbose_name ='Комментарий',max_length = 200, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.request)+", "+str(self.user)+", "+str(self.status)+", "+self.comment

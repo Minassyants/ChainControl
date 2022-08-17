@@ -1,5 +1,5 @@
 {% extends 'ChainControl/index.html' %}
-
+{% load static %}
 {% block title %}
 Заявки на согласование
 {% endblock %}
@@ -8,31 +8,92 @@
 <script type="text/javascript">
     $(document).ready(function () {
         btn = document.getElementById('request_nav').getElementsByClassName('active');
+        $('#content').empty();
+        $('#content').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
         $('#content').load(btn[0].value);
+
+        $('input[type=search]').on('search', function () {
+            if (this.value) {
+                btn = document.getElementById('request_nav').getElementsByClassName('active');
+                $('#content').empty();
+                $('#content').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+                $('#content').load(btn[0].value + "?q=" + this.value);
+            }
+        });
     });
+
+    function search_from_button(btn) {
+
+        if (btn.dataset.val == 0) {
+            $('#request_search_form').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+            $('#request_search_form').load("{% url 'get_search_form' %}", function () {
+                $('#id_form').submit(function (e) {
+                    e.preventDefault();
+                    btn1 = document.getElementById('request_nav').getElementsByClassName('active');
+                    $('#content').empty();
+                    $('#content').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+                    $('#content').load(btn1[0].value + "?" + $('#id_form').serialize());
+                });
+                $('select').selectize({
+                    sortField: 'text',
+                    allowEmptyOption : 'true'
+                });
+            });
+            btn.dataset.val = 1;
+            btn.getElementsByTagName("img")[0].src = "{% static 'ChainControl/images/funnel-fill.svg' %}";
+        }
+        else {
+            $('#request_search_form').empty();
+            btn.dataset.val = 0;
+            btn.getElementsByTagName("img")[0].src = "{% static 'ChainControl/images/funnel.svg' %}";
+        };
+    }
+
     function request_nav(btn) {
         btns = document.getElementById('request_nav').querySelectorAll('button.active');
         btns.forEach(function (el) {
             el.classList.remove('active');
         })
+        $('#content').empty();
+        $('#content').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
         $('#content').load(btn.value);
         btn.classList.add('active');
     }
+
+    function request_page(page) {
+        btn = document.getElementById('request_nav').getElementsByClassName('active');
+        $('#content').empty();
+        $('#content').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+        $('#content').load(btn[0].value+"?page="+page);
+    }
+
 </script>
 {% endblock %}
 
 {% block descr %}
 
-<div id="request_nav" class="btn-group start-50 translate-middle-x" role="group" aria-label="Basic example">
-  <button onclick="request_nav(this)" id="requests_for_approval" type="button" class="btn btn-primary active" value="{% url 'requests_for_approval' %}">Заявки на согласование</button>
-  <button onclick="request_nav(this)" id="requests_all" type="button" class="btn btn-primary" value="{% url 'requests_all' %}">Все заявки</button>
-  <button onclick="request_nav(this)" id="requests_my_requests" type="button" class="btn btn-primary" value="{% url 'requests_my_requests' %}">Мои заявки</button>
+    
+<div id="request_nav" class="btn-group start-50 translate-middle-x mt-3" role="group" aria-label="Basic example">
+    <button onclick="request_nav(this)" id="requests_for_approval" type="button" class="btn btn-primary active" value="{% url 'requests_for_approval' %}">Заявки на согласование</button>
+    {% if user.is_staff %}
+    <button onclick="request_nav(this)" id="requests_all" type="button" class="btn btn-primary" value="{% url 'requests_all' %}">Все заявки</button>
+    {% endif %}
+    <button onclick="request_nav(this)" id="requests_my_requests" type="button" class="btn btn-primary" value="{% url 'requests_my_requests' %}">Мои заявки</button>
+    <button onclick="request_nav(this)" id="requests_to_be_done" type="button" class="btn btn-primary" value="{% url 'requests_to_be_done' %}">Заявки к исполнению</button>
 </div>
+
+    <div class="mt-3">
+        <span role="button" onclick="search_from_button(this)" id="request_search_form_button" class="border-0 ms-3" data-val=0>
+            Фильтр
+            <img src="{% static 'ChainControl/images/funnel.svg' %}" />
+        </span>
+        <div class="row" id="request_search_form"></div>
+    </div>
 {% endblock %}
 
 {% block body %}
 <div id="content" class="container-fluid">
-    
+
 </div>
 
 

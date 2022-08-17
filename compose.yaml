@@ -8,7 +8,7 @@ services:
     expose:
     - 8000
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -16,8 +16,8 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
-      - LETSENCRYPT_HOST=jelastic.minassyants.kz
-      - VIRTUAL_HOST=jelastic.minassyants.kz
+      - LETSENCRYPT_HOST=localhost
+      - VIRTUAL_HOST=localhost
       - VIRTUAL_PORT=8000
     depends_on:
       - redis
@@ -28,7 +28,7 @@ services:
    
     command: celery -A Autodom worker -P solo --loglevel=info
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -45,7 +45,7 @@ services:
    
     command: celery -A Autodom beat -l DEBUG
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
