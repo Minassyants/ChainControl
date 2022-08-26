@@ -39,6 +39,7 @@ def update_request_status(instance,approval,comment = None):
             el.save()
         write_history(request = instance,user = approval.user, status = instance.status, comment= comment if comment else russian_strings.comment_request_on_rework)
         return
+    periodic_tasks.send_approval_status_approved_notification(instance)
     write_history(request = instance,user = approval.user, status = approval.new_status, comment= comment if comment else russian_strings.comment_new_status)
     
 

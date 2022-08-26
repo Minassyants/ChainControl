@@ -23,6 +23,9 @@ class RequestSearchForm(forms.ModelForm):
                                                             }))
     status = forms.ChoiceField(choices= models.Request.StatusTypes.choices + [("","----")],required=False)
 
+    expired = forms.BooleanField(widget= forms.CheckboxInput(attrs={'class' : 'form-check-input',
+                                                                    'role' : 'switch'}))
+
     class Meta:
         model = models.Request
         fields = ['id','client','user','sum','date','status']
@@ -32,7 +35,9 @@ class RequestSearchForm(forms.ModelForm):
             'client' : forms.Select(attrs={'class' : 'form-control',}),
             'sum' : forms.NumberInput(attrs={'class' : 'form-control',}),
             'date' : forms.DateInput(format='%Y-%m-%d'),
-            'status' : forms.Select(attrs={'class' : 'form-control',})
+            'status' : forms.Select(attrs={'class' : 'form-control',}),
+            'expired' : forms.CheckboxInput(attrs={'class' : 'form-control',
+                                                   'role' : 'switch'}),
             }
 
     def __init__(self, data=None,instance = None, **kwargs):
@@ -97,11 +102,6 @@ class RequestForm(forms.ModelForm):
     comment = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control',
                                                            'rows':'2',
                                                                    }))
-    
-    contract = forms.ChoiceField(choices= [("","----")])
-
-    bank_account = forms.ChoiceField(choices= [("","----")])
-
 
     class Meta:
         model = models.Request
@@ -119,6 +119,25 @@ class RequestForm(forms.ModelForm):
             'invoice_date' : forms.DateInput(format='%Y-%m-%d'),
             'AVR_date' : forms.DateInput(format='%Y-%m-%d'),
             }
+
+    def __init__(self, *args , **kwargs):
+        super(RequestForm, self).__init__(*args, **kwargs)
+        if getattr(self.instance,'contract',None) !=None:
+            self.fields['contract'].choices = self.instance.client.contract_set.values_list('id','name')
+        else:
+            self.fields['contract'].choices = [("","----")]
+
+        if getattr(self.instance,'bank_account',None) !=None:
+            self.fields['bank_account'].choices = self.instance.client.bank_account_set.values_list('id','account_number')
+        else:
+            self.fields['bank_account'].choices = [("","----")]
+
+        if getattr(self.instance,'client',None) !=None:
+            self.fields['client'].choices = [ (str(self.instance.client.id), str(self.instance.client )) ]
+        else:
+            self.fields['client'].choices = [("","----")]
+
+    
        
 AdditionalFileInlineFormset = inlineformset_factory(models.Request,models.Additional_file, widgets= {
     "file" : forms.FileInput(attrs = {'class' : 'form-control form-control-sm'})

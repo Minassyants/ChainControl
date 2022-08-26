@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView, CreateView
+from django.views.generic.list import ListView
 from django.forms import modelformset_factory
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
@@ -9,10 +13,10 @@ from django.core.paginator import Paginator
 from django import forms
 from django.contrib import messages
 from django.db.models import Q, F, Value, CharField,Count
-from django.http import JsonResponse
-import Autodom.integ_1C as integ_1C
+from django.http import JsonResponse, HttpResponseForbidden
 from .forms import RequestForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm
-from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, History
+from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, History,Client,Role,Request_type
+from django.contrib.auth.models import User
 from . import utils
 from . import periodic_tasks
 from . import russian_strings
@@ -33,7 +37,7 @@ def requests(request):
 
 @login_required
 def requesrs_to_be_done(request):
-    periodic_tasks.abc()
+    #periodic_tasks.abc()
     cur_user = request.user
     approval_count = Count('approval')
     approved_count = Count('approval', filter = Q(approval__new_status = Request.StatusTypes.APPROVED))
@@ -278,6 +282,13 @@ def logout_user(request):
     return redirect('login_user')
 
 @login_required
+def get_clients(request):
+    if request.method == 'GET':
+        
+        els = list(Client.objects.all().values('id','name').annotate(value=F('id'),text=F('name')))
+        return JsonResponse(els, safe=False)
+
+@login_required
 def get_contracts(request):
     if request.method == 'GET':
         id = request.GET['id']
@@ -354,18 +365,220 @@ def set_request_done(request, id):
             el.save()
             utils.write_history(el,request.user,el.status, russian_strings.comment_request_done)
             periodic_tasks.send_request_done_notification(el)
-        return redirect('index')
+        return redirect(reverse('request_item', args=[str(el.id)]))
     raise PermissionDenied
 
 @login_required
 def set_request_canceled(request, id):
     if request.method == 'POST' and 'cancel' in request.POST:
         el = get_object_or_404(Request,id=id)
-        NOT_ALLOWED = {Request.StatusTypes.APPROVED ,Request.StatusTypes.DONE}
+        NOT_ALLOWED = {Request.StatusTypes.DONE}
         if  not el.status in NOT_ALLOWED and el.user == request.user:
             el.status = Request.StatusTypes.CANCELED
             el.save()
+            utils.reset_request_approvals(el)
+            messages.success(request,'Заявка отменена')
             utils.write_history(el,request.user,el.status, russian_strings.comment_request_canceled)
             periodic_tasks.send_request_canceled_notification(el)
-        return redirect('index')
+        return redirect(reverse('request_item', kwargs={"pk":str(el.id)}))
     raise PermissionDenied
+
+@method_decorator(login_required,name='dispatch')
+class RequestDetailView(DetailView):
+    model = Request
+    form_class = RequestForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['user_is_executor'] = self.request.user.userprofile.role == self.object.type.executor and self.object.status == Request.StatusTypes.APPROVED
+
+        DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
+        context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
+
+        history = self.object.history_set.order_by('-date')
+        utils.set_approval_color(history)
+        context['history'] = history
+
+        approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
+        if self.object.status != Request.StatusTypes.ON_REWORK and approving_user.count() > 0 :
+            approving_user = approving_user.get()
+            if (approving_user.user != None and approving_user.user == self.request.user) or (approving_user.role != None and approving_user.role == self.request.user.userprofile.role) :
+                approving_user = approving_user.id
+            else:
+                approving_user = False
+        else:
+           approving_user = False
+        context['approving_user'] = approving_user
+
+        return context
+
+    def render_to_response(self, context):
+        ALOWED_STATUS = [Request.StatusTypes.APPROVED, Request.StatusTypes.DONE]
+        if self.object.user == self.request.user and not self.object.status in ALOWED_STATUS  :
+            return redirect('request_update',pk=self.object.pk)
+        return super(RequestDetailView,self).render_to_response(context)
+
+
+@method_decorator(login_required,name='dispatch')
+class RequestUpdateView(UpdateView):
+    model = Request
+    form_class = RequestForm
+
+    def get_context_data(self, **kwargs ):
+        context = super().get_context_data(**kwargs)
+
+        DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
+        context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
+
+        history = self.object.history_set.order_by('-date')
+        utils.set_approval_color(history)
+        context['history'] = history
+
+        modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
+        addfiles = modelformset(queryset=Additional_file.objects.filter(request_1=self.object.id),initial=[{
+                'request_1':self.object,},])
+        context['addfiles'] = addfiles
+
+        return context
+
+    def post(self, request, **kwargs):
+        self.object = self.get_object()
+        if request.user != self.object.user:
+            messages.warning(request,'Заявка редактируется только заявителем')
+            return HttpResponseForbidden
+
+        form = self.get_form()
+        modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
+        addfiles = modelformset(request.POST,request.FILES,initial=[{
+            'request_1':self.object,},])
+        if addfiles.is_valid():
+            files = addfiles.save(commit = False)
+            for file in addfiles.deleted_objects:
+                file.delete()
+            for file in files:
+                file.request_1 = self.object
+                file.save()
+        
+        
+        if form.data['status'] == Request.StatusTypes.ON_REWORK or form.data['status']== Request.StatusTypes.CANCELED:
+            form.data._mutable = True
+            form.data['status'] = Request.StatusTypes.ON_APPROVAL
+            form.data._mutable = False
+            comment = russian_strings.comment_request_reworked    
+        else :
+            comment = russian_strings.comment_request_changed
+            
+        if form.is_valid():
+            if len(form.changed_data) > 0:
+                utils.write_history(self.object,request.user,Request.StatusTypes.ON_APPROVAL, comment)
+                utils.reset_request_approvals(self.object)
+                messages.success(request,'Заявка обновлена')
+            periodic_tasks.send_approval_status_approved_notification(self.object)
+            return self.form_valid(form)
+        else:
+            messages.warning(request,'Не удалось обновить заявку')
+            return self.form_invalid(form)
+
+    def render_to_response(self, context):
+        DISALOWED_STATUS = [Request.StatusTypes.APPROVED, Request.StatusTypes.DONE]
+        if self.object.user != self.request.user or self.object.status in DISALOWED_STATUS :
+            return redirect('request_item',pk=self.object.pk)
+        return super(RequestUpdateView,self).render_to_response(context)
+
+@method_decorator(login_required,name='dispatch')
+class RequestListView(ListView):
+    model= Request
+    paginate_by = 20
+
+    def get_queryset(self):
+        cur_user = self.request.user
+        approval_count = Count('approval')
+        approved_count = Count('approval', filter = Q(approval__new_status = Request.StatusTypes.APPROVED))
+        qs = super(RequestListView, self).get_queryset().annotate(approval_count = approval_count).annotate(approved_count = approved_count)
+
+        mode = self.request.GET.get('mode','requests_for_approval')
+        
+        if mode == 'my_requests':
+            qs = qs.filter(user=cur_user)
+        elif mode == 'requests_to_be_done':
+            qs =qs.filter(Q(status='AP') & Q(type__executor=cur_user.userprofile.role)).distinct()
+        elif mode == 'all_requests' and cur_user.is_staff:
+            pass
+        else:
+            qs = qs.filter(Q(approval__new_status='OA', approval__request__status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
+
+        ALLOWED = ('id', 'client', 'sum','date','user','status')
+        request_filter = RequestSearchForm(self.request.GET)
+        if request_filter.is_valid():
+            kwargs = dict(
+                (key, value)
+                for key, value in request_filter.cleaned_data.items()
+                if key in ALLOWED and (value != None and value != "")
+            )
+            if request_filter.cleaned_data['expired']:
+                kwargs['status__in'] = ['OA','AP']
+                kwargs['complete_before__lte'] = datetime.now()
+            qs = qs.filter(**kwargs)
+
+
+        qs = qs.order_by('-id')
+        utils.set_approval_color(qs)
+        return qs
+@method_decorator(login_required,name='dispatch')
+class RequestCreateView(CreateView):
+    model = Request
+    form_class = RequestForm
+    template_name_suffix = '_create_form'
+    
+
+    def get_initial(self):
+        now = datetime.now()
+        return {'user':self.request.user,
+                'date':now.date,
+                'complete_before': now+timedelta( days= 3),
+                'invoice_date':now,
+                'AVR_date':now,
+                'status':Request.StatusTypes.ON_APPROVAL.value,
+                }
+
+    def get_context_data(self, **kwargs ):
+        context = super().get_context_data(**kwargs)
+        context['addfiles'] = AdditionalFileInlineFormset()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = RequestForm(request.POST)        
+        addfiles = AdditionalFileInlineFormset(request.POST,request.FILES, instance=form.instance)
+        # check whether it's valid:
+        if form.is_valid() :
+            obj = form.save(commit = False)
+            obj.user = request.user
+            form.save()
+            if addfiles.is_valid():
+                files = addfiles.save(commit = False)
+                for file in files:
+                    file.request_1 = obj
+                    file.save()
+                messages.success(request,'Заявка создана')
+                return self.form_valid(form)
+            
+        messages.warning(request,'Заявка не создана')
+
+        return self.form_invalid(form)
+
+def test_view(request):
+    approval_roles_1 = Role.objects.filter(approval__new_status='OA', approval__request__status='OA')
+    approval_users_1 = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA') | Q(userprofile__role__in = approval_roles_1 )).distinct()
+
+    approval_roles_2 = Role.objects.filter(approval__new_status='OA',approval__request__status='OA', approval__request__complete_before__lte = datetime.now() )
+    approval_users_2 = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA', approval__request__complete_before__lte = datetime.now() ) | Q(userprofile__role__in = approval_roles_2 )).distinct()
+
+    approval_roles_3 = Request_type.objects.filter(request__status='AP').values('executor')
+    approval_users_3 = User.objects.filter(Q(userprofile__role__in = approval_roles_3 )).distinct()
+
+    return render(request,'ChainControl/t1.html',{
+        "u1" : approval_users_1,
+        "u2" : approval_users_2,
+        "u3" : approval_users_3,
+        })

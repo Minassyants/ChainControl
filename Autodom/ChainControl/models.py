@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from tinymce.models import HTMLField
@@ -109,6 +110,9 @@ class Request(models.Model):
 
     def __str__(self):
         return self.client.name + ", "+ str(self.complete_before)+", "+str(self.sum)
+
+    def get_absolute_url(self):
+        return reverse('request_item', args=[str(self.id)])
 
     class Meta:
         ordering = ["complete_before"]

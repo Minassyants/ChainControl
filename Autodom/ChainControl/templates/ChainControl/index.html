@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load pwa_webpush %}
+
 <html style="font-size: 16px;">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,8 +27,8 @@
 
 </head>
 <body class="d-flex flex-column h-100 ">
-    
-    
+
+
     <nav class="navbar navbar-expand-lg bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"> <img src="{% static 'ChainControl/images/icons/icon.ico' %}" class="u-logo-image u-logo-image-1"></a>
@@ -74,15 +75,15 @@
         </div>
     </nav>
 
-   
+
 
 
     <main class="flex-shrink-0 mb-1">
         <div class="container-fluid">
 
-           
-                {% block descr%} {% endblock%}
-            
+
+            {% block descr%} {% endblock%}
+
             <hr />
             {% if messages %}
             {% for message in messages %}
@@ -96,7 +97,7 @@
 
         </div>
     </main>
-   
+
 
 </body>
 </html>

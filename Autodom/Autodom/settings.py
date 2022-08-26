@@ -156,8 +156,8 @@ EMAIL_USE_SSL = True
 
 #PWA settings
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'serviceworker.js')
-PWA_APP_NAME = 'ChainControl'
-PWA_APP_DESCRIPTION = "ChainControl"
+PWA_APP_NAME = 'CC'
+PWA_APP_DESCRIPTION = "CC"
 PWA_APP_THEME_COLOR = '#0A0302'
 PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
@@ -171,6 +171,14 @@ PWA_APP_ICONS = [
         'sizes': '160x160'
     }
 ]
+
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/ChainControl/images/my_app_icon.png',
+        'sizes': '160x160'
+    }
+]
+
 PWA_APP_SPLASH_SCREEN = [
     {
         'src': '/static/ChainControl/images/icons/splash-640x1136.png',

@@ -1,5 +1,6 @@
 <form class="row g-3 " id="id_form">
     {% csrf_token %}
+    
     <div class="row g-1">
         <label for="inputid" class="col-md-1 form-label ">Номер заявки</label>
         <div class="col-md-2">
@@ -32,6 +33,11 @@
         <div class="col-md-2">
 
             {{form.date}}
+        </div>
+        <label for="inputexpired" class="col-md-1 form-label ">Просроченные</label>
+        <div class="col-md-1 form-check form-switch">
+
+            {{form.expired}}
         </div>
         <div class="row g-1">
             <div class="col-md-3">

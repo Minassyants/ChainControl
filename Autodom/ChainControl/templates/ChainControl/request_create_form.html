@@ -11,6 +11,15 @@
         $('select').selectize({
             sortField: 'text'
         });
+
+        $.getJSON("{% url 'get_clients' %}", function (Clients) {
+
+            $("#id_client").selectize()[0].selectize.clearOptions();
+            $("#id_client").selectize()[0].selectize.load(function (callback) {
+                callback(Clients);
+            });
+
+        });
     });
 </script>
 {% endblock %}
