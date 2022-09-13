@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import posixpath
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,14 +21,29 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '33079540-1038-475c-84b2-bc6b03a6d221'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-#DEBUG = False
+#DEBUG = True
+DEBUG = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 
 
-ALLOWED_HOSTS = ["0.0.0.0","localhost","127.0.0.1","env-2591628.jcloud.kz","jelastic.minassyants.kz"]
+
+ALLOWED_HOSTS = ["web","0.0.0.0",os.environ.get("ALLOWED_HOST","localhost")]
+admin_name, admin_email = os.environ.get("ADMIN_NAME_EMAIL","Alexandr:killka1997@gmail.com").split(":")
+ADMINS = [(admin_name,admin_email),]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+    'mail_admins': {
+        'level': 'ERROR',
+        'class': 'django.utils.log.AdminEmailHandler',
+        'include_html': True,
+    },
+},
+    }
 
 # Application references
 # https://docs.djangoproject.com/en/2.1/ref/settings/#std:setting-INSTALLED_APPS
@@ -86,18 +101,18 @@ WSGI_APPLICATION = 'Autodom.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.environ.get("POSTGRES_USER"),
-        #'USER': os.environ.get("POSTGRES_USER"),
-        #'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
-        #'HOST': os.environ.get("POSTGRES_HOST"),
-        #'PORT': 5432,
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': 8111,
+        'NAME': os.environ.get("POSTGRES_USER",'postgres'),
+        'USER': os.environ.get("POSTGRES_USER",'postgres'),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD",'password'),
+        'HOST': os.environ.get("POSTGRES_HOST",'localhost'),
+        'PORT': os.environ.get("POSTGRES_PORT",'8111'),
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': 'postgres',
+        #'USER': 'postgres',
+        #'PASSWORD': 'password',
+        #'HOST': 'localhost',
+        #'PORT': 8111,
     }
 }
 
@@ -147,10 +162,10 @@ CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
 
 #email settings
-EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = '465'
-EMAIL_HOST_USER = 'info@minassyants.kz'
-EMAIL_HOST_PASSWORD = 'SyIatpOYi~33'
+EMAIL_HOST = os.environ.get("EMAIL_HOST") 
+EMAIL_PORT = os.environ.get("EMAIL_PORT")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = True
 
 

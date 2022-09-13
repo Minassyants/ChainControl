@@ -13,7 +13,7 @@ class Role(models.Model):
 class UserProfile(models.Model):
     user= models.OneToOneField(User, on_delete = models.CASCADE)
     role= models.ForeignKey(Role,on_delete = models.CASCADE)
-
+    tg_chat_id = models.IntegerField(verbose_name='ID чата (телеграм)', blank=True,null=True)
     def __str__(self):
         return self.user.username + " доп. информация"
 
@@ -163,6 +163,8 @@ class Email_templates(models.Model):
     
     notification_subject = models.CharField(verbose_name='Заголовок уведомления', max_length=100,blank=False,null=False,default='123')
     notification_text = models.CharField(verbose_name='Текст уведомления', max_length=100,blank=False,null=False,default='123')
+
+    tg_text = models.CharField(verbose_name='Текст телеграмм сообщения', max_length=100,blank=False,null=False,default='123')
 
     def __str__(self):
         return self.get_email_type_display()

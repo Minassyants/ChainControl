@@ -1,7 +1,7 @@
 import os
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-from .models import Request, Ordering, Approval, Additional_file
+from .models import Request, Approval, Additional_file
 from . import periodic_tasks
 from . import utils
 from .russian_strings import comment_create_request

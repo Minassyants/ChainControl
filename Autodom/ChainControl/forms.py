@@ -44,8 +44,6 @@ class RequestSearchForm(forms.ModelForm):
         super(RequestSearchForm, self).__init__(data=data,instance=instance,**kwargs)
         for i in self.fields:
             self.fields[i].required = False
-        #self.fields['status'].choices.append(("" , "----" ))
-        #self.fields['status'].initial = self.fields['status'].choices[0]
         
 
 

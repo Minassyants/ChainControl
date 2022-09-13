@@ -17,9 +17,15 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
       - LETSENCRYPT_HOST=localhost
       - VIRTUAL_HOST=localhost
       - VIRTUAL_PORT=8000
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
     depends_on:
       - redis
       - db
@@ -37,6 +43,12 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
     depends_on:
       - web
       - redis
@@ -54,6 +66,12 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
     depends_on:
       - web
       - redis
@@ -78,6 +96,12 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
     depends_on:
       - celery
       - redis
@@ -116,7 +140,15 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     
-        
+  tg_bot:
+    image: killka1997/cctelegrambot
+    environment:
+    - TELEGRAM_TOKEN=5776306301:AAGITlyxjF3tUyE6Md3g5IWDTQaW3qGfy8Q
+    - WEB_URL=http://web:8000
+    - HOST=0.0.0.0
+    - PORT=6666
+    depends_on:
+    - web
 
 
 volumes:

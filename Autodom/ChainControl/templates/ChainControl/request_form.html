@@ -203,9 +203,26 @@
                             </div>
 
                         </div>
-                    </div>
+                        <div id="last_comment">
+                            {% with history|first as item %}
+                            <h5>Последний комментарий:</h5>
+                            <div class="card">
+                                <div class="card-header ">
+
+                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user}}
+
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{item.date | date:'G:i d M Y'}}</h5>
+                                    <p class="card-text">{{item.comment}}</p>
+                                </div>
+                            </div>
+                            {% endwith %}
+
+                        </div>
                 </div>
             </div>
+                </div>
         </form>
         {% if user_can_cancel %}
         <div class="row g-3 p-3">

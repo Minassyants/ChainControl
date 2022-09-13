@@ -174,7 +174,23 @@
                             </div>
 
                         </div>
-                    </div>
+                        <div id="last_comment">
+                            {% with history|first as item %}
+                            <div class="card g-3 p-3">
+                                <div class="card-header ">
+
+                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user.first_name}}
+
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{item.date | date:'G:i d M Y'}}</h5>
+                                    <p class="card-text">{{item.comment}}</p>
+                                </div>
+
+
+                            </div>
+                            {% endwith %}
+                        </div>
                 </div>
             </div>
         </form>
@@ -215,7 +231,7 @@
         <div class="card g-3 p-3">
             <div class="card-header ">
 
-                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user}}
+                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user.first_name}}
 
             </div>
             <div class="card-body">
@@ -236,7 +252,7 @@
             sortField: 'text'
         });
         $("#id_new_status").on("change", function () {
-            if ($(this).val() == 'OR') {
+            if ($(this).val() == 'OR' || $(this).val()=='CA') {
                 $("#id_approval_comment").attr('required', '');
             }
             else {

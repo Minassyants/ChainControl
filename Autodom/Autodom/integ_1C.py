@@ -8,6 +8,39 @@ USER_1C=fr'МА_АДМИН'.encode()
 PASSWORD_1C=fr'741852'.encode()
 ROOT_URL_1C="http://185.233.3.224/Hino_test/odata/standard.odata/"
 
+def delClients():
+    clients = Client.objects.filter(request__isnull=True)
+    payload ={
+        
+        '$format':'json',
+        '$orderby':'Description'}
+    for client in clients:
+        payload['$filter'] = 'Ref_Key eq guid\''+client.guid+'\' and DeletionMark eq false'
+        rjs = get1C("Catalog_Контрагенты", payload)
+        print(payload)
+        
+        if not 'value' in rjs or len(rjs['value'])==0:
+            client.delete()
+    
+    bank_accounts = Bank_account.objects.filter(request__isnull=True)
+    for ba in bank_accounts:
+        payload['$filter'] = 'Ref_Key eq guid\''+ba.guid+'\' and DeletionMark eq false'
+        rjs = get1C("Catalog_БанковскиеСчета",payload)
+        print(payload)
+        
+        if not 'value' in rjs or len(rjs['value'])==0:
+            ba.delete()
+
+    contracts = Contract.objects.filter(request__isnull=True)
+    for contract in contracts:
+        payload['$filter'] = 'Ref_Key eq guid\''+contract.guid+'\' and DeletionMark eq false'
+        rjs = get1C("Catalog_ДоговорыКонтрагентов",payload)
+        print(payload)
+        
+        if not 'value' in rjs or len(rjs['value'])==0:
+            contract.delete()
+
+
 def getClients(guid=None):
     getCurrency()
     getBanks()
@@ -27,14 +60,19 @@ def getClients(guid=None):
         rjs = get1C("Catalog_Контрагенты",payload)
         for el in rjs['value']:
             obj, created = Client.objects.get_or_create(guid=el['Ref_Key'])
-            if created:
-                obj.guid = el['Ref_Key']
-                obj.biin = el['ИдентификационныйКодЛичности']
-                obj.name = el['Description']
-                obj.KBE  = el['КБЕ']
-                obj.save()
+            
+            obj.guid = el['Ref_Key']
+            obj.biin = el['ИдентификационныйКодЛичности']
+            obj.name = el['Description']
+            obj.KBE  = el['КБЕ']
+            obj.save()
+            #if created:
+            #    obj.guid = el['Ref_Key']
+            #    obj.biin = el['ИдентификационныйКодЛичности']
+            #    obj.name = el['Description']
+            #    obj.KBE  = el['КБЕ']
+            #    obj.save()
                 
-                print('created'+el['Description'])
             getContracts(obj)
             getBank_accounts(obj)
                 
@@ -56,16 +94,26 @@ def getContracts(client):
         rjs = get1C("Catalog_ДоговорыКонтрагентов",payload)
         for el in rjs['value']:
             obj, created = Contract.objects.get_or_create(guid=el['Ref_Key'], client=client)
-            if created:
-                obj.guid = el['Ref_Key']
-                obj.client = client
-                obj.name = el['Description']
-                obj.number  = el['НомерДоговора']
-                obj.date = None if el['ДатаДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаДоговора'] ,"%Y-%m-%dT%H:%M:%S")
-                obj.start_date = None if el['ДатаНачалаДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаНачалаДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
-                obj.end_date = None if el['ДатаОкончанияДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаОкончанияДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
-                obj.save()
-                print('created'+el['Description'])
+
+            obj.guid = el['Ref_Key']
+            obj.client = client
+            obj.name = el['Description']
+            obj.number  = el['НомерДоговора']
+            obj.date = None if el['ДатаДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаДоговора'] ,"%Y-%m-%dT%H:%M:%S")
+            obj.start_date = None if el['ДатаНачалаДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаНачалаДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
+            obj.end_date = None if el['ДатаОкончанияДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаОкончанияДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
+            obj.save()
+                
+            #if created:
+            #    obj.guid = el['Ref_Key']
+            #    obj.client = client
+            #    obj.name = el['Description']
+            #    obj.number  = el['НомерДоговора']
+            #    obj.date = None if el['ДатаДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаДоговора'] ,"%Y-%m-%dT%H:%M:%S")
+            #    obj.start_date = None if el['ДатаНачалаДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаНачалаДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
+            #    obj.end_date = None if el['ДатаОкончанияДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаОкончанияДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
+            #    obj.save()
+            #    print('created'+el['Description'])
     return True
 
 def getBank_accounts(client):
@@ -90,14 +138,23 @@ def getBank_accounts(client):
                 'bank':bank,
                 'currency':currency,
                 })
-            if created:
-                obj.guid = el['Ref_Key']
-                obj.client = client
-                obj.bank = bank
-                obj.currency  = currency
-                obj.account_number = el['НомерСчета']
-                obj.save()
-                print('created'+el['Description'])
+            
+            obj.guid = el['Ref_Key']
+            obj.client = client
+            obj.bank = bank
+            obj.currency  = currency
+            obj.account_number = el['НомерСчета']
+            obj.save()
+                
+            #if created:
+            #    obj.guid = el['Ref_Key']
+            #    obj.client = client
+            #    obj.bank = bank
+            #    obj.currency  = currency
+            #    obj.account_number = el['НомерСчета']
+            #    obj.save()
+            #    print('created'+el['Description'])
+
     return True
 
 def getBanks():
@@ -116,12 +173,18 @@ def getBanks():
         rjs = get1C("Catalog_Банки",payload)
         for el in rjs['value']:
             obj, created = Bank.objects.get_or_create(guid=el['Ref_Key'])
-            if created:
-                obj.guid = el['Ref_Key']
-                obj.name = el['Description']
-                obj.BIK = el['БИК']
-                obj.save()
-                print('created'+el['Description'])
+            
+            obj.guid = el['Ref_Key']
+            obj.name = el['Description']
+            obj.BIK = el['БИК']
+            obj.save()
+                
+            #if created:
+            #    obj.guid = el['Ref_Key']
+            #    obj.name = el['Description']
+            #    obj.BIK = el['БИК']
+            #    obj.save()
+            #    print('created'+el['Description'])
     return True
 
 def getCurrency():
@@ -140,13 +203,21 @@ def getCurrency():
         rjs = get1C("Catalog_Валюты",payload)
         for el in rjs['value']:
             obj, created = Currency.objects.get_or_create(guid=el['Ref_Key'])
-            if created:
-                obj.guid = el['Ref_Key']
-                obj.name = el['Description']
-                obj.code = el['Code']
-                obj.code_str = el['БуквенныйКод']
-                obj.save()
-                print('created'+el['Description'])
+            
+            obj.guid = el['Ref_Key']
+            obj.name = el['Description']
+            obj.code = el['Code']
+            obj.code_str = el['БуквенныйКод']
+            obj.save()
+                
+            #if created:
+            #    obj.guid = el['Ref_Key']
+            #    obj.name = el['Description']
+            #    obj.code = el['Code']
+            #    obj.code_str = el['БуквенныйКод']
+            #    obj.save()
+            #    print('created'+el['Description'])
+
     return True
 
 def get1C(entity,payload,is_count=False):

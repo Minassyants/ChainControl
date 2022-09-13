@@ -1,6 +1,5 @@
-
 from datetime import datetime
-from django.db.models import Q, Count, CharField,Value
+from django.db.models import CharField, Value
 from django.contrib.auth.models import User
 from .models import  Approval,Request,Ordering,History
 from . import russian_strings, periodic_tasks
