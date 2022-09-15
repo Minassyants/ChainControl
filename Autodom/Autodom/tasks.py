@@ -20,17 +20,20 @@ from pwa_webpush import send_user_notification
 def send_request_creator_notification(request_id,email_type):
     #MAIL BLOCK #################
     el = get_object_or_404(Request,id=request_id)
-    if not el.user.email is str or len(el.user.email)<1:
+    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+    if el.user.email == "":
         msg = f'{el.user} не указана почта'
         mail_admins("send_request_creator_notification",msg)
     else:
         mail_list = [el.user.email,]
    
-        email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+        
     
-        email_text = Template(email_template.text).render(Context({"request":el}))
+        email_text = Template(email_template.text).render(Context({"request":el,
+                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.id)})
+                                                                   }))
         email_subject = Template(email_template.subject).render(Context({"request":el,
-                                                                         "url":reverse('request_item', kwargs={"pk":str(el.id)})
+                                                                         
                                                                          }))
 
         send_mail(
@@ -43,7 +46,7 @@ def send_request_creator_notification(request_id,email_type):
     )
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
-    if len(el.user.webpush_info_set) != 0:
+    if len(el.user.webpush_info.all()) != 0:
         user_list = [el.user,]
         notification_subject = Template(email_template.notification_subject).render(Context({"request":el}))
         notification_text = Template(email_template.notification_text).render(Context({"request":el}))
@@ -53,14 +56,19 @@ def send_request_creator_notification(request_id,email_type):
                    "url" : reverse('request_item', kwargs={"pk":str(el.id)}),
                    }
         for usr in user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
     #END PWA BLOCK ################
     #telegram
     #if el.user.userprofile.tg_chat_id is int and len(el.user.userprofile.tg_chat_id)>1:
-    if el.user.userprofile.tg_chat_id:
+    if not el.user.userprofile.tg_chat_id is None:
         tg_text = Template(email_template.tg_text).render(Context({"request":el}))
         data = {"messages": [{"chat_id": el.user.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('request_item', kwargs={"pk":str(el.id)})}]}
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.id)}),
+                                 }]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
             msg = f'{el.user} не удалось отправить сообщение в телеграмм'
@@ -74,11 +82,14 @@ def send_next_approval_notification(request_id,email_type):
     el = Approval.objects.filter(request__id=request_id,new_status = 'OA')
     el = el.order_by('order')[:1]
     el = el.get()
+
+    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+
     no_emails = []
     mail_list = []
     user_list = []
     if el.user != None:
-        if not el.user.email is str or len(el.user.email)<1:
+        if el.user.email == "":
             no_emails.append(el.user)
         else:
             mail_list.append(el.user.email)
@@ -87,7 +98,7 @@ def send_next_approval_notification(request_id,email_type):
     else:
         usrs = User.objects.filter(userprofile__role = el.role)
         for usr in usrs:
-            if not usr.email is str or len(usr.email)<1:
+            if usr.email == "":
                 no_emails.append(usr)
             else:
                 mail_list.append(usr.email)
@@ -99,11 +110,13 @@ def send_next_approval_notification(request_id,email_type):
             msg += f'{i} не указана почта\n'
         mail_admins("send_next_approval_notification",msg)
     if len(mail_list)>0:
-        email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+        
     
-        email_text = Template(email_template.text).render(Context({"request":el.request}))
+        email_text = Template(email_template.text).render(Context({"request":el.request,
+                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.request.id)})
+                                                                   }))
         email_subject = Template(email_template.subject).render(Context({"request":el.request,
-                                                                         "url":reverse('request_item', kwargs={"pk":str(el.request.id)})
+                                                                         
                                                                          }))
 
         send_mail(
@@ -116,7 +129,7 @@ def send_next_approval_notification(request_id,email_type):
     )
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
-    notif_user_list = [x for x in user_list if len(x.webpush_info_set) != 0]
+    notif_user_list = [x for x in user_list if len(x.webpush_info.all()) != 0]
     if len(notif_user_list)>0:
         notification_subject = Template(email_template.notification_subject).render(Context({"request":el.request}))
         notification_text = Template(email_template.notification_text).render(Context({"request":el.request}))
@@ -126,14 +139,18 @@ def send_next_approval_notification(request_id,email_type):
                     "url" : reverse('request_item', kwargs={"pk":str(el.request.id)}),
                     }
         for usr in notif_user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
 
     #END PWA BLOCK ################
-    tg_user_list = [x for x in user_list if x.userprofile.tg_chat_id]
+    tg_user_list = [x for x in user_list if not x.userprofile.tg_chat_id is None]
     if len(tg_user_list)>0:
         tg_text = Template(email_template.tg_text).render(Context({"request":el.request}))
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('request_item', kwargs={"pk":str(el.request.id)})
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.request.id)}),
                                  } for x in tg_user_list ]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -151,8 +168,11 @@ def send_executor_notification(request_id,email_type):
     mail_list = []
     user_list = []
     usrs = User.objects.filter(userprofile__role = role)
+
+    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+
     for usr in usrs:
-        if not usr.email is str or len(usr.email)<1:
+        if usr.email == "":
             no_emails.append(usr)
         else:
             mail_list.append(usr.email)
@@ -164,11 +184,13 @@ def send_executor_notification(request_id,email_type):
         mail_admins("send_executor_notification",msg)
 
     if len(mail_list)>0:
-        email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+        
     
-        email_text = Template(email_template.text).render(Context({"request":request}))
+        email_text = Template(email_template.text).render(Context({"request":request,
+                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(request.id)})
+                                                                   }))
         email_subject = Template(email_template.subject).render(Context({"request":request,
-                                                                         "url":reverse('request_item', kwargs={"pk":str(request.id)})
+                                                                         
                                                                          }))
 
         send_mail(
@@ -181,7 +203,7 @@ def send_executor_notification(request_id,email_type):
     )
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
-    notif_user_list = [x for x in user_list if len(x.webpush_info_set) != 0]
+    notif_user_list = [x for x in user_list if len(x.webpush_info.all()) != 0]
     if len(notif_user_list)>0:
         notification_subject = Template(email_template.notification_subject).render(Context({"request":request}))
         notification_text = Template(email_template.notification_text).render(Context({"request":request}))
@@ -191,14 +213,18 @@ def send_executor_notification(request_id,email_type):
                    "url" : reverse('request_item', kwargs={"pk":str(request.id)}),
                    }
         for usr in user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
 
     #END PWA BLOCK ################
-    tg_user_list = [x for x in user_list if x.userprofile.tg_chat_id]
+    tg_user_list = [x for x in user_list if not x.userprofile.tg_chat_id is None]
     if len(tg_user_list)>0:
         tg_text = Template(email_template.tg_text).render(Context({"request":request}))
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('request_item', kwargs={"pk":str(request.id)})
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(request.id)}),
                                  } for x in tg_user_list ]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -210,19 +236,20 @@ def send_executor_notification(request_id,email_type):
 def send_daily_approval_notification():
     email_template = Email_templates.objects.get(email_type='200') #TODO: exception
     email_text = email_template.text
+    email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
     approval_roles = Role.objects.filter(approval__new_status='OA', approval__request__status='OA')
     approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA') | Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email__isnull=False).values_list('email'))
+    email_list = list(approval_users.filter(email="").values_list('email'))
     mail_list = []
     
     for i in email_list:
-        mail_list.append( ( email_subject, email_text, email_text, settings.EMAIL_HOST_USER,i))
+        mail_list.append( ( email_subject, email_text, email_html, settings.EMAIL_HOST_USER,i))
    
     send_mass_html_mail(mail_list, fail_silently=False)
 
-    no_emails = list(approval_users.filter(email__isnull=True))
+    no_emails = list(approval_users.filter(email=""))
     if len(no_emails)>0:
         msg = ""
         for i in no_emails:
@@ -238,14 +265,19 @@ def send_daily_approval_notification():
                    "icon": static('ChainControl/images/icons/icon.ico'),
                    }
         for usr in user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
 
     #telegram
     tg_users = approval_users.filter(userprofile__tg_chat_id__isnull=False)
     if len(tg_users)>0:
         tg_text = email_template.tg_text
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('index')} for x in tg_users ]}
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('index'),
+                                 } for x in tg_users ]}
         
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -258,18 +290,19 @@ def send_daily_approval_notification():
 def send_deadline_passed_notificaton():
     email_template = Email_templates.objects.get(email_type='220') #TODO: exception
     email_text = email_template.text
+    email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
     approval_roles = Role.objects.filter(approval__new_status='OA',approval__request__status='OA', approval__request__complete_before__lte = datetime.now() )
     approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA', approval__request__complete_before__lte = datetime.now() ) | Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email__isnull=False).values_list('email'))
+    email_list = list(approval_users.filter(email="").values_list('email'))
     mail_list = []
     for i in email_list:
-        mail_list.append( ( email_subject, email_text, email_text, settings.EMAIL_HOST_USER,i))
+        mail_list.append( ( email_subject, email_text, email_html, settings.EMAIL_HOST_USER,i))
    
     send_mass_html_mail(mail_list, fail_silently=False)
 
-    no_emails = list(approval_users.filter(email__isnull=True))
+    no_emails = list(approval_users.filter(email=""))
     if len(no_emails)>0:
         msg = ""
         for i in no_emails:
@@ -285,14 +318,19 @@ def send_deadline_passed_notificaton():
                    "icon": static('ChainControl/images/icons/icon.ico'),
                    }
         for usr in user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
 
     #telegram
     tg_users = approval_users.filter(userprofile__tg_chat_id__isnull=False)
     if len(tg_users)>0:
         tg_text = email_template.tg_text
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('index')} for x in tg_users ]}
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('index'),
+                                 } for x in tg_users ]}
         
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -305,18 +343,19 @@ def send_deadline_passed_notificaton():
 def send_daily_executor_notification():
     email_template = Email_templates.objects.get(email_type='210') #TODO: exception
     email_text = email_template.text
+    email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
     approval_roles = Request_type.objects.filter(request__status='AP').values('executor')
     approval_users = User.objects.filter(Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email__isnull=False).values_list('email'))
+    email_list = list(approval_users.filter(email="").values_list('email'))
     mail_list = []
     for i in email_list:
-        mail_list.append( ( email_subject, email_text, email_text, settings.EMAIL_HOST_USER,i))
+        mail_list.append( ( email_subject, email_text, email_html, settings.EMAIL_HOST_USER,i))
 
     send_mass_html_mail(mail_list, fail_silently=False)
 
-    no_emails = list(approval_users.filter(email__isnull=True))
+    no_emails = list(approval_users.filter(email=""))
     if len(no_emails)>0:
         msg = ""
         for i in no_emails:
@@ -332,14 +371,19 @@ def send_daily_executor_notification():
                    "icon": static('ChainControl/images/icons/icon.ico'),
                    }
         for usr in user_list:
-            send_user_notification(user=usr, payload=payload, ttl=1000)
+            try:
+                send_user_notification(user=usr, payload=payload, ttl=1000)
+            except:
+                pass
 
     #telegram
     tg_users = approval_users.filter(userprofile__tg_chat_id__isnull=False)
     if len(tg_users)>0:
         tg_text = email_template.tg_text
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
-                                 "text":tg_text+"\n"+reverse('index')} for x in tg_users ]}
+                                 "text":tg_text,
+                                 "url":settings.BASE_URL+reverse('index'),
+                                 } for x in tg_users ]}
         
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":

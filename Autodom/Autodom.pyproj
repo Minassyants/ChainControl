@@ -96,6 +96,7 @@
   <ItemGroup>
     <Content Include="ChainControl\templates\ChainControl\approval_form.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_status.html" />
+    <Content Include="ChainControl\templates\ChainControl\email\email.html" />
     <Content Include="ChainControl\templates\ChainControl\request_create_form.html" />
     <Content Include="ChainControl\templates\ChainControl\index.html" />
     <Content Include="ChainControl\templates\ChainControl\login_user.html" />
@@ -162,6 +163,7 @@
     <Folder Include="ChainControl\migrations\" />
     <Folder Include="ChainControl\templates\" />
     <Folder Include="ChainControl\templates\ChainControl\" />
+    <Folder Include="ChainControl\templates\ChainControl\email\" />
     <Folder Include="pwa_webpush\" />
     <Folder Include="pwa_webpush\migrations\" />
     <Folder Include="pwa_webpush\migrations\__pycache__\" />

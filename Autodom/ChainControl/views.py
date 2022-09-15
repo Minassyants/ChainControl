@@ -23,6 +23,21 @@ from . import russian_strings
 
 
 @csrf_exempt
+def tg_logout(request):
+    if request.method == 'POST':
+        response = {'value':False}
+        try:
+            user = User.objects.get(userprofile__tg_chat_id=int(request.POST['chat_id']))
+        except:
+            response['error'] = "User not found"
+            return JsonResponse(response)
+        user.userprofile.tg_chat_id = None
+        user.userprofile.save()
+        response['value'] = True
+        return JsonResponse(response)
+    return PermissionDenied
+
+@csrf_exempt
 def tg_reg_user(request):
     if request.method == 'POST':
         response = {'value':False}
@@ -33,6 +48,9 @@ def tg_reg_user(request):
             return JsonResponse(response)
 
         if user.check_password(request.POST['password']):
+            for u in User.objects.filter(~Q(id=user.id),userprofile__tg_chat_id=int(request.POST['chat_id'])):
+                u.userprofile.tg_chat_id = None
+                u.userprofile.save()
             user.userprofile.tg_chat_id = int(request.POST['chat_id'])
             user.userprofile.save()
             response['value'] = True

@@ -20,5 +20,6 @@ urlpatterns = [
     path('api/get_request_search_form', views.get_search_form, name='get_search_form'),
     path('api/set_request_done/<id>', views.set_request_done, name='set_request_done'),
     path('api/set_request_canceled/<id>', views.set_request_canceled , name='set_request_canceled'),
-    path('tg_api/reg_user', views.tg_reg_user, name='tg_reg_user')
+    path('tg_api/reg_user', views.tg_reg_user, name='tg_reg_user'),
+    path('tg_api/logout', views.tg_logout, name='tg_logout'),
     ]

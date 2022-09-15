@@ -28,8 +28,8 @@ CSRF_COOKIE_SECURE = True
 
 
 
-
-ALLOWED_HOSTS = ["web","0.0.0.0",os.environ.get("ALLOWED_HOST","localhost")]
+BASE_URL = os.environ.get("ALLOWED_HOST","localhost")
+ALLOWED_HOSTS = ["web","0.0.0.0","localhost",BASE_URL]
 admin_name, admin_email = os.environ.get("ADMIN_NAME_EMAIL","Alexandr:killka1997@gmail.com").split(":")
 ADMINS = [(admin_name,admin_email),]
 
@@ -167,7 +167,7 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = True
-
+SERVER_EMAIL = EMAIL_HOST_USER
 
 #PWA settings
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'serviceworker.js')
