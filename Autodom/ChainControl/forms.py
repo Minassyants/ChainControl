@@ -120,6 +120,12 @@ class RequestForm(forms.ModelForm):
 
     def __init__(self, *args , **kwargs):
         super(RequestForm, self).__init__(*args, **kwargs)
+
+        self.fields['currency'].required = False
+        self.fields['comment'].required = False
+        self.fields['AVR_date'].required = False
+        self.fields['invoice_details'].required = False
+
         if getattr(self.instance,'contract',None) !=None:
             self.fields['contract'].choices = self.instance.client.contract_set.values_list('id','name')
         else:

@@ -102,7 +102,9 @@ def getContracts(client):
             obj.date = None if el['ДатаДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаДоговора'] ,"%Y-%m-%dT%H:%M:%S")
             obj.start_date = None if el['ДатаНачалаДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаНачалаДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
             obj.end_date = None if el['ДатаОкончанияДействияДоговора'] == '0001-01-01T00:00:00' else datetime.strptime( el['ДатаОкончанияДействияДоговора'] , "%Y-%m-%dT%H:%M:%S")
+            obj.currency  = None if el['ВалютаВзаиморасчетов_Key']=='00000000-0000-0000-0000-000000000000' else Currency.objects.get(guid=el['ВалютаВзаиморасчетов_Key'])
             obj.save()
+            
                 
             #if created:
             #    obj.guid = el['Ref_Key']

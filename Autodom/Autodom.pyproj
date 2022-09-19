@@ -94,6 +94,7 @@
     <Compile Include="pwa_webpush\__init__.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ChainControl\templates\admin\base.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_form.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_status.html" />
     <Content Include="ChainControl\templates\ChainControl\email\email.html" />
@@ -159,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Autodom\" />
+    <Folder Include="ChainControl\templates\admin\" />
     <Folder Include="ChainControl\" />
     <Folder Include="ChainControl\migrations\" />
     <Folder Include="ChainControl\templates\" />

@@ -25,6 +25,15 @@ class Client(models.Model):
     def __str__(self):
         return self.name +", "+self.biin
 
+class Currency(models.Model):
+    guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
+    name = models.TextField(verbose_name='Наименование',max_length = 50)
+    code = models.TextField(verbose_name='Код валюты',max_length = 3,blank=True,null=True)
+    code_str = models.TextField(verbose_name='Код валюты строкой', max_length = 3,blank=True,null=True)
+
+    def __str__(self):
+        return self.code_str
+
 class Contract(models.Model):
     guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
     client = models.ForeignKey(Client,on_delete = models.CASCADE)
@@ -33,6 +42,7 @@ class Contract(models.Model):
     date = models.DateField(verbose_name='Дата договора',blank=True,null=True)
     start_date = models.DateField(verbose_name='Дата начала',blank=True,null=True)
     end_date = models.DateField(verbose_name = 'Дата окончания',blank=True,null=True)
+    currency = models.ForeignKey(Currency,verbose_name='Валюта договора', blank=True,null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
@@ -46,14 +56,7 @@ class Bank(models.Model):
         return self.name +", "+self.BIK
 
 
-class Currency(models.Model):
-    guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)
-    name = models.TextField(verbose_name='Наименование',max_length = 50)
-    code = models.TextField(verbose_name='Код валюты',max_length = 3,blank=True,null=True)
-    code_str = models.TextField(verbose_name='Код валюты строкой', max_length = 3,blank=True,null=True)
 
-    def __str__(self):
-        return self.code_str
 
 class Payment_type(models.Model):
     name = models.TextField(verbose_name='Наименование',max_length = 50)
@@ -91,11 +94,11 @@ class Request(models.Model):
     complete_before = models.DateField(verbose_name='Завершить до')
     invoice_number = models.TextField(verbose_name='Номер счета на оплату', max_length = 20)
     invoice_date = models.DateField(verbose_name='Дата счета на оплату')
-    invoice_details = models.TextField(verbose_name='Содержание',max_length = 200)
-    AVR_date = models.DateField(verbose_name='Дата оказания услуг/передачи товара')
+    invoice_details = models.TextField(verbose_name='Содержание',max_length = 200,blank=True,null=True)
+    AVR_date = models.DateField(verbose_name='Дата оказания услуг/передачи товара',blank=True,null=True)
     sum = models.FloatField(verbose_name = 'Сумма')
-    comment = models.TextField(verbose_name ='Комментарий',max_length = 200)
-    currency = models.ForeignKey(Currency, on_delete = models.CASCADE,verbose_name='Валюта')
+    comment = models.TextField(verbose_name ='Комментарий',max_length = 200,blank=True,null=True)
+    currency = models.ForeignKey(Currency, on_delete = models.CASCADE,verbose_name='Валюта',blank=True,null=True)
     
     class StatusTypes(models.TextChoices):
         OPEN = 'OP', _('Открыта')
@@ -159,12 +162,12 @@ class Email_templates(models.Model):
 
     email_type = models.CharField(verbose_name='Тип шаблона', max_length=3,choices= Email_types.choices,default=Email_types.INITIAL_NOTIFICATION,unique=True)
     subject = models.CharField(verbose_name='Тема письма', max_length=100,blank=False,null=False)
-    text = HTMLField(verbose_name='Текст письма')
+    text = models.TextField(verbose_name='Текст письма', max_length=500,blank=False,null=False)
     
     notification_subject = models.CharField(verbose_name='Заголовок уведомления', max_length=100,blank=False,null=False,default='123')
-    notification_text = models.CharField(verbose_name='Текст уведомления', max_length=100,blank=False,null=False,default='123')
+    notification_text = models.TextField(verbose_name='Текст уведомления', max_length=400,blank=False,null=False,default='123')
 
-    tg_text = models.CharField(verbose_name='Текст телеграмм сообщения', max_length=100,blank=False,null=False,default='123')
+    tg_text = models.TextField(verbose_name='Текст телеграмм сообщения', max_length=400,blank=False,null=False,default='123')
 
     def __str__(self):
         return self.get_email_type_display()

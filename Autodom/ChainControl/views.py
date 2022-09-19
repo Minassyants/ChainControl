@@ -373,6 +373,8 @@ class RequestCreateView(CreateView):
         # check whether it's valid:
         if form.is_valid() :
             obj = form.save(commit = False)
+            if obj.currency == None:
+                obj.currency = obj.contract.currency
             obj.user = request.user
             form.save()
             if addfiles.is_valid():

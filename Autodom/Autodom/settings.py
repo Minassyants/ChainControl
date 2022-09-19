@@ -82,7 +82,7 @@ LOGIN_URL = 'login_user'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["ChainControl/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
