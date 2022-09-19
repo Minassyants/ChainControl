@@ -54,7 +54,11 @@
                         <li><a class="dropdown-item" aria-current="page" href="{% url 'logout_user' %}">Выйти</a></li>
                     </ul>
                 </ul>
+                <button type="button" id="tg_button" class="border-0 ms-3 bg-transparent p-0" data-bs-toggle="modal" data-bs-target="#qrcode">
+                    <img src="{% static 'ChainControl/images/telegram.svg' %}" class="nav-item ms-3" />
+                </button>
                 {% webpush_button %}
+
                 {% else %}
                 <ul class="navbar-nav ms-auto  mb-2 mb-lg-0">
 
@@ -96,8 +100,38 @@
             {% block body %}{% endblock %}
 
         </div>
+
+
+        <!-- Modal qrcode for telegram -->
+        <div class="modal fade" id="qrcode" tabindex="-1" aria-labelledby="qrcodelabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="qrcodelabel">Получать уведомления в телеграм?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="qrcode_image" class="text-center"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
     </main>
-
-
+    {% if user.is_authenticated %}
+    <script type="text/javascript">
+        $('#tg_button').on('click', function () {
+            $('#qrcode_image').empty();
+            $('#qrcode_image').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+            $('#qrcode_image').load("{% url 'tg_get_auth_qrcode' %}");
+        });
+        
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -107,6 +107,7 @@
     <Content Include="ChainControl\templates\ChainControl\request_form.html" />
     <Content Include="ChainControl\templates\ChainControl\request_list.html" />
     <Content Include="ChainControl\templates\ChainControl\request_search_form.html" />
+    <Content Include="ChainControl\templates\ChainControl\tg_qrcode.html" />
     <Content Include="pwa_webpush\migrations\__pycache__\0001_initial.cpython-37.pyc" />
     <Content Include="pwa_webpush\migrations\__pycache__\0002_auto_20220718_1750.cpython-37.pyc" />
     <Content Include="pwa_webpush\migrations\__pycache__\__init__.cpython-37.pyc" />

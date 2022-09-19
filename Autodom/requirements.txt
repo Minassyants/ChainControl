@@ -69,3 +69,4 @@ wrapt==1.14.1
 zipp==3.8.0
 zope.interface==5.4.0
 django-tinymce==3.4.0
+qrcode[pil]

@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+import base64
+from io import BytesIO
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.generic.list import ListView
@@ -15,12 +17,22 @@ from django.contrib import messages
 from django.db.models import Q, F, Value, CharField,Count
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
+import qrcode
 from .forms import RequestForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm
 from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, Client
 from . import utils
 from . import periodic_tasks
 from . import russian_strings
 
+@login_required
+def tg_get_auth_qrcode(request):
+    img = qrcode.make(f'https://t.me/ChainControl_bot?start={request.user.username}')
+    buff = BytesIO()
+    img.save(buff, format="PNG")
+    img_str = base64.b64encode(buff.getvalue()).decode("utf-8")
+    context = {"qrcode":img_str}
+    temp = render(request,'ChainControl/tg_qrcode.html',context)
+    return temp
 
 @csrf_exempt
 def tg_logout(request):

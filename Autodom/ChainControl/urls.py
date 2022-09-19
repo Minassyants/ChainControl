@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/set_request_canceled/<id>', views.set_request_canceled , name='set_request_canceled'),
     path('tg_api/reg_user', views.tg_reg_user, name='tg_reg_user'),
     path('tg_api/logout', views.tg_logout, name='tg_logout'),
+    path('tg_api/get_auth_qrcode',views.tg_get_auth_qrcode, name='tg_get_auth_qrcode'),
     ]
