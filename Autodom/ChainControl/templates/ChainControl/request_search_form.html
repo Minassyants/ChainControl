@@ -1,0 +1,48 @@
+<form class="row g-3 " id="id_form">
+    {% csrf_token %}
+    
+    <div class="row g-1">
+        <label for="inputid" class="col-md-1 form-label ">Номер заявки</label>
+        <div class="col-md-2">
+
+            {{form.id}}
+        </div>
+        <label for="inputuser" class="col-md-1 form-label ">Заявитель</label>
+        <div class="col-md-2">
+
+            {{form.user}}
+        </div>
+        <label for="inputclient" class="col-md-1 form-label ">Контрагент</label>
+        <div class="col-md-2">
+
+            {{form.client}}
+        </div>
+    </div>
+    <div class="row g-1">
+        <label for="inputstatus" class="col-md-1 form-label ">Статус</label>
+        <div class="col-md-2">
+
+            {{form.status}}
+        </div>
+        <label for="inputsum" class="col-md-1 form-label ">Сумма</label>
+        <div class="col-md-2">
+
+            {{form.sum}}
+        </div>
+        <label for="inputdate" class="col-md-1 form-label ">Дата создания</label>
+        <div class="col-md-2">
+
+            {{form.date}}
+        </div>
+        <label for="inputexpired" class="col-md-1 form-label ">Просроченные</label>
+        <div class="col-md-1 form-check form-switch">
+
+            {{form.expired}}
+        </div>
+        <div class="row g-1">
+            <div class="col-md-3">
+                <button type="submit" id="id_form_button" class="btn btn-primary ">Поиск</button>
+            </div>
+        </div>
+    </div>
+</form>

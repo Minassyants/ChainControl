@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load pwa_webpush %}
+
 <html style="font-size: 16px;">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,24 +9,29 @@
     {% progressive_web_app_meta %}
     {% webpush_header %}
     <title>
-    {% block title %}{% endblock %}
+        {% block title %}{% endblock %}
     </title>
 
-    <link rel="icon" type="image/x-icon" href="{% static 'Tel1/images/sobaka_70c_icon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'ChainControl/images/icons/icon.ico' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
     <script src="{% static 'ChainControl/jquery.js' %}"></script>
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.6/css/selectize.bootstrap5.css" integrity="sha512-wD3+yEMEGhx4+wKKWd0bNGCI+fxhDsK7znFYPvf2wOVxpr7gWnf4+BKphWnUCzf49AUAF6GYbaCBws1e5XHSsg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.6/css/selectize.bootstrap5.css" integrity="sha512-wD3+yEMEGhx4+wKKWd0bNGCI+fxhDsK7znFYPvf2wOVxpr7gWnf4+BKphWnUCzf49AUAF6GYbaCBws1e5XHSsg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     {% block scripts %} {% endblock %}
 
 </head>
 <body class="d-flex flex-column h-100 ">
-    
-    
+
+
     <nav class="navbar navbar-expand-lg bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#"> <img src="{% static 'Tel1/images/sobaka_70c_icon.ico' %}" class="u-logo-image u-logo-image-1"></a>
+            <a class="navbar-brand" href="#"> <img src="{% static 'ChainControl/images/icons/icon.ico' %}" class="u-logo-image u-logo-image-1"></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -37,32 +43,51 @@
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="{% url 'createRequest' %}">Создать заявку</a>
                     </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto  mb-2 mb-lg-0">
-                        {% if user.is_authenticated %}
-                        <li class="nav-item me-auto ms-lg-auto">
-                            <a class="nav-link active" aria-current="page" href="{% url 'logout_user' %}">Выйти</a>
-                        </li>
-                        {% else %}
-                        <li class="nav-item ms-auto ms-lg-auto">
-                            <a class="nav-link active" aria-current="page" href="{% url 'login_user' %}">Войти</a>
-                        </li>
-                        {% endif %}
+                </ul>
+                {% if user.is_authenticated %}
 
+                <ul class="nav-item dropdown ms-auto  mb-2 mb-lg-0">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{user.first_name}} ({{user.userprofile.role}})
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <li><a class="dropdown-item" aria-current="page" href="{% url 'logout_user' %}">Выйти</a></li>
                     </ul>
+                </ul>
+                <button type="button" id="tg_button" class="border-0 ms-3 bg-transparent p-0" data-bs-toggle="modal" data-bs-target="#qrcode">
+                    <img src="{% static 'ChainControl/images/telegram.svg' %}" class="nav-item ms-3" />
+                </button>
+                {% webpush_button %}
+
+                {% else %}
+                <ul class="navbar-nav ms-auto  mb-2 mb-lg-0">
+
+
+                    <li class="nav-item me-auto ms-lg-auto">
+
+
+                    </li>
+
+                    <li class="nav-item ms-auto ms-lg-auto">
+                        <a class="nav-link active" aria-current="page" href="{% url 'login_user' %}">Войти</a>
+                    </li>
+                </ul>
+                {% endif %}
+
+
             </div>
         </div>
     </nav>
 
-   
+
 
 
     <main class="flex-shrink-0 mb-1">
         <div class="container-fluid">
 
-           {% webpush_button %}
-                {% block descr%} {% endblock%}
-            
+
+            {% block descr%} {% endblock%}
+
             <hr />
             {% if messages %}
             {% for message in messages %}
@@ -75,8 +100,38 @@
             {% block body %}{% endblock %}
 
         </div>
-    </main>
-   
 
+
+        <!-- Modal qrcode for telegram -->
+        <div class="modal fade" id="qrcode" tabindex="-1" aria-labelledby="qrcodelabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="qrcodelabel">Получать уведомления в телеграм?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="qrcode_image" class="text-center"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </main>
+    {% if user.is_authenticated %}
+    <script type="text/javascript">
+        $('#tg_button').on('click', function () {
+            $('#qrcode_image').empty();
+            $('#qrcode_image').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+            $('#qrcode_image').load("{% url 'tg_get_auth_qrcode' %}");
+        });
+        
+    </script>
+    {% endif %}
 </body>
 </html>

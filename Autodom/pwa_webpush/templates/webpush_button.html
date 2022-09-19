@@ -1,6 +1,6 @@
 {% if user.is_authenticated or group %}
-  <button id="webpush-subscribe-button" {% if group %}data-group="{{ group }}"{% endif %} data-url="{{ webpush_save_url }}">
-    Subscribe to Push Messaging
+  <button id="webpush-subscribe-button" class="border-0 ms-3 bg-transparent p-0" {% if group %}data-group="{{ group }}"{% endif %} data-url="{{ webpush_save_url }}">
+      <img src= "/static/ChainControl/images/bell.svg" />
   </button>
   <div id="webpush-message" hidden></div>
 {% endif %}

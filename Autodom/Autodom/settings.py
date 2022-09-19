@@ -11,21 +11,39 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import posixpath
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '33079540-1038-475c-84b2-bc6b03a6d221'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
+DEBUG = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
-ALLOWED_HOSTS = ["0.0.0.0","localhost","127.0.0.1","env-2591628.jcloud.kz","jelastic.minassyants.kz"]
+
+
+BASE_URL = os.environ.get("ALLOWED_HOST","localhost")
+ALLOWED_HOSTS = ["web","0.0.0.0","localhost",BASE_URL]
+admin_name, admin_email = os.environ.get("ADMIN_NAME_EMAIL","Alexandr:killka1997@gmail.com").split(":")
+ADMINS = [(admin_name,admin_email),]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+    'mail_admins': {
+        'level': 'ERROR',
+        'class': 'django.utils.log.AdminEmailHandler',
+        'include_html': True,
+    },
+},
+    }
 
 # Application references
 # https://docs.djangoproject.com/en/2.1/ref/settings/#std:setting-INSTALLED_APPS
@@ -40,6 +58,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'ChainControl.apps.ChaincontrolConfig',
     'pwa_webpush',
+    'tinymce',
 ]
 
 # Middleware framework
@@ -52,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'Autodom.urls'
@@ -62,7 +82,7 @@ LOGIN_URL = 'login_user'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["ChainControl/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,18 +101,18 @@ WSGI_APPLICATION = 'Autodom.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.environ.get("POSTGRES_USER"),
-        #'USER': os.environ.get("POSTGRES_USER"),
-        #'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),
-        #'HOST': os.environ.get("POSTGRES_HOST"),
-        #'PORT': 5432,
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgrespw',
-        'HOST': 'localhost',
-        'PORT': 49153,
+        'NAME': os.environ.get("POSTGRES_USER",'postgres'),
+        'USER': os.environ.get("POSTGRES_USER",'postgres'),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD",'password'),
+        'HOST': os.environ.get("POSTGRES_HOST",'localhost'),
+        'PORT': os.environ.get("POSTGRES_PORT",'8111'),
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': 'postgres',
+        #'USER': 'postgres',
+        #'PASSWORD': 'password',
+        #'HOST': 'localhost',
+        #'PORT': 8111,
     }
 }
 
@@ -115,12 +135,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Asia/Almaty'
 USE_I18N = True
-USE_L10N = True
-USE_TZ = True
 
+
+USE_TZ = True
+DATE_FORMAT = 'Y-m-d'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "ChainControl/static"),
 )
@@ -128,41 +149,30 @@ STATICFILES_DIRS = (
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 STATIC_URL = '/static/'
 #STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
-STATIC_ROOT = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_ROOT = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 #Celery
-#CELERY_BROKER_URL = "redis://localhost:6379"
-#CELERY_RESULT_BACKEND = "redis://localhost:6379"
-#CELERY_BROKER_URL = "redis://admin:KVYapc65341@10.0.9.174"
-#CELERY_RESULT_BACKEND = "redis://admin:KVYapc65341@10.0.9.174"
+
 CELERY_BROKER_URL = os.environ.get("BROKER_URL")
 CELERY_RESULT_BACKEND = os.environ.get("RESULT_BACKEND")
-#CELERY_CELERYBEAT_SCHEDULE = {
-#    'add-every-30-seconds': {
-#        'task': 'tasks.add',
-#        'schedule': 10.0,
-#        'args': (16, 16)
-#    }
-#    }
-#CELERY_CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
 
 #email settings
-EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = '465'
-EMAIL_HOST_USER = 'info@minassyants.kz'
-EMAIL_HOST_PASSWORD = 'SyIatpOYi~33'
+EMAIL_HOST = os.environ.get("EMAIL_HOST") 
+EMAIL_PORT = os.environ.get("EMAIL_PORT")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = True
-
+SERVER_EMAIL = EMAIL_HOST_USER
 
 #PWA settings
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'serviceworker.js')
-PWA_APP_NAME = 'My App'
-PWA_APP_DESCRIPTION = "My app description"
+PWA_APP_NAME = 'CC'
+PWA_APP_DESCRIPTION = "CC"
 PWA_APP_THEME_COLOR = '#0A0302'
 PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
@@ -172,13 +182,21 @@ PWA_APP_START_URL = '/'
 PWA_APP_DEBUG_MODE = True
 PWA_APP_ICONS = [
     {
-        'src': '/static/images/my_app_icon.png',
+        'src': '/static/ChainControl/images/my_app_icon.png',
         'sizes': '160x160'
     }
 ]
+
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/ChainControl/images/my_app_icon.png',
+        'sizes': '160x160'
+    }
+]
+
 PWA_APP_SPLASH_SCREEN = [
     {
-        'src': '/static/images/icons/splash-640x1136.png',
+        'src': '/static/ChainControl/images/icons/splash-640x1136.png',
         'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
     }
 ]

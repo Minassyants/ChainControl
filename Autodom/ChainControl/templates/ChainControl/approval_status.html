@@ -1,0 +1,18 @@
+<ul class="list-group">
+
+    {% for el in els %}
+    <li class="list-group-item">
+        <blockquote class="blockquote {{ el.color }}">
+            {{ el.get_new_status_display }}
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            {% if el.user.first_name %}
+            {{ el.user.first_name}}
+            {% else %}
+            {{ el.role}}
+            {% endif %}
+        </figcaption>
+
+    </li>
+    {% endfor %}
+</ul>
