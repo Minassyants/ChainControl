@@ -3,7 +3,7 @@
     {% for el in els %}
     <li class="list-group-item">
         <blockquote class="blockquote {{ el.color }}">
-            {{ el.get_new_status_display }}
+            <h6>{{ el.get_new_status_display }}</h6>
         </blockquote>
         <figcaption class="blockquote-footer">
             {% if el.user.first_name %}

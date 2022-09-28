@@ -13,6 +13,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
 from django import forms
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+
+
+
 from django.contrib import messages
 from django.db.models import Q, F, Value, CharField,Count
 from django.http import JsonResponse, HttpResponseForbidden
@@ -32,6 +38,9 @@ def tg_get_auth_qrcode(request):
     img_str = base64.b64encode(buff.getvalue()).decode("utf-8")
     context = {"qrcode":img_str}
     temp = render(request,'ChainControl/tg_qrcode.html',context)
+
+    
+
     return temp
 
 @csrf_exempt

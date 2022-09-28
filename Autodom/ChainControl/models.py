@@ -1,9 +1,10 @@
+
 from datetime import datetime
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from tinymce.models import HTMLField
+
 
 class Role(models.Model):
     name= models.TextField(verbose_name='Наименование',max_length = 100,blank=True,null=True)
@@ -16,6 +17,8 @@ class UserProfile(models.Model):
     tg_chat_id = models.IntegerField(verbose_name='ID чата (телеграм)', blank=True,null=True)
     def __str__(self):
         return self.user.username + " доп. информация"
+
+    
 
 class Client(models.Model):
     guid = models.TextField(verbose_name = 'ГУИД 1с',max_length = 36)

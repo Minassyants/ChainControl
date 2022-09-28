@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'ChainControl.apps.ChaincontrolConfig',
     'pwa_webpush',
     'tinymce',
+    'channels',
 ]
 
 # Middleware framework
@@ -95,7 +96,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Autodom.wsgi.application'
+#WSGI_APPLICATION = 'Autodom.wsgi.application'
+ASGI_APPLICATION = 'Autodom.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -154,11 +156,21 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+
 #Celery
 
-CELERY_BROKER_URL = os.environ.get("BROKER_URL")
+CELERY_BROKER_URL = os.environ.get("BROKER_URL","redis://localhost:6379")
 CELERY_RESULT_BACKEND = os.environ.get("RESULT_BACKEND")
 CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+#Channels
+
+CHANNEL_LAYERS = {
+    'default':{
+        'BACKEND':'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(CELERY_BROKER_URL[8:-5],CELERY_BROKER_URL[-4:])]}
+        }}
 
 
 #email settings

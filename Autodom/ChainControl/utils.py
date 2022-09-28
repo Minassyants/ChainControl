@@ -22,6 +22,7 @@ def update_request_status(instance,approval,comment = None):
     total_count = instance.approval_set.count()
     approved_count = instance.approval_set.filter(new_status = Request.StatusTypes.APPROVED).count()
     rework_count = instance.approval_set.filter(new_status = Request.StatusTypes.ON_REWORK).count()
+    cancel_count = instance.approval_set.filter(new_status = Request.StatusTypes.CANCELED).count()
     if approved_count == total_count:
         instance.status = Request.StatusTypes.APPROVED
         instance.save()
@@ -33,11 +34,18 @@ def update_request_status(instance,approval,comment = None):
         instance.status = Request.StatusTypes.ON_REWORK
         periodic_tasks.send_approval_status_on_rework_notification(instance)
         instance.save()
-        for el in instance.approval_set.all():
-            el.new_status = Request.StatusTypes.ON_APPROVAL
-            el.save()
+        instance.approval_set.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
         write_history(request = instance,user = approval.user, status = instance.status, comment= comment if comment else russian_strings.comment_request_on_rework)
         return
+
+    if cancel_count > 0:
+        instance.status = Request.StatusTypes.CANCELED
+        periodic_tasks.send_request_canceled_notification(instance)
+        instance.save()
+        instance.approval_set.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
+        write_history(request = instance,user = approval.user, status = instance.status, comment= comment if comment else russian_strings.comment_request_canceled)
+        return
+        
     periodic_tasks.send_approval_status_approved_notification(instance)
     write_history(request = instance,user = approval.user, status = approval.new_status, comment= comment if comment else russian_strings.comment_new_status)
     

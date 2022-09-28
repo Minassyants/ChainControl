@@ -38,7 +38,13 @@
     <Compile Include="Autodom\celery_init.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Autodom\consumers.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Autodom\integ_1C.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Autodom\rounting.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Autodom\tasks.py">

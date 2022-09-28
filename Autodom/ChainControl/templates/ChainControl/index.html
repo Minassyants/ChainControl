@@ -121,6 +121,23 @@
         </div>
 
 
+        <!--Toasts-->
+        <div class="toast-container position-fixed bottom-0 end-0" id="toast_notif">
+            <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+                <div class="toast-header">
+
+                    <strong class="me-auto"><a href="#">Bootstrap</a></strong>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Hello, world! This is a toast message.
+                </div>
+            </div>
+        </div>
+        
+            
+        
 
     </main>
     {% if user.is_authenticated %}
@@ -130,8 +147,54 @@
             $('#qrcode_image').append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
             $('#qrcode_image').load("{% url 'tg_get_auth_qrcode' %}");
         });
-        
+
     </script>
+
+    <script type="text/javascript">
+        function connect() {
+            var ws = 'wss://';
+            if (location.protocol !== 'https:') {
+                ws = 'ws://';
+            }
+            var chatSocket = new WebSocket(
+                ws
+                + window.location.host
+                + '/ws/notif/'
+            );
+
+            //chatSocket.onopen = function (e) {
+
+            //};
+
+            chatSocket.onmessage = function (e) {
+
+                data = JSON.parse(e.data);
+
+                cloned = document.querySelector("#liveToast").cloneNode(true);
+                cloned.querySelector("div.toast-body").textContent = data.text;
+                cloned.querySelector("div.toast-header > strong > a").href = data.url;
+                cloned.querySelector("div.toast-header > strong > a").textContent = data.subject;
+                cloned.addEventListener('hidden.bs.toast', () => {
+                    document.querySelector("#liveToast").remove();
+                });
+
+                document.querySelector("#toast_notif").appendChild(cloned);
+                toast = new bootstrap.Toast(cloned);
+
+                toast.show();
+
+            };
+
+            chatSocket.onclose = function (e) {
+                //console.error('Chat socket closed unexpectedly');
+                setTimeout(function () {
+                    connect();
+                }, 1000);
+            };
+        }
+        connect();
+    </script>
+
     {% endif %}
 </body>
 </html>

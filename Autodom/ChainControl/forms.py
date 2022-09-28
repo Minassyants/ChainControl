@@ -49,7 +49,7 @@ class RequestSearchForm(forms.ModelForm):
 
 class ApprovalForm(forms.ModelForm):
 
-    approval_comment = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control',
+    approval_comment = forms.CharField(label="Комментарий к согласованию",widget=forms.Textarea(attrs={'class':'form-control',
                                                            'rows':'2',
                                                                    }))
 

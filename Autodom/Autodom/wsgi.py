@@ -16,15 +16,20 @@ For more information, visit
 https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 
-import os, gunicorn, django
-from django.core.wsgi import get_wsgi_application
+import os
 
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from .rounting import ws_urlpatterns
 
 os.environ.setdefault(
     'DJANGO_SETTINGS_MODULE',
     'Autodom.settings')
-django.setup()
-# This application object is used by any WSGI server configured to use this
-# file. This includes Django's development server, if the WSGI_APPLICATION
-# setting points here.
-application = get_wsgi_application()
+
+django_asgi = get_asgi_application()
+application = ProtocolTypeRouter({
+    "http": django_asgi,
+    "https": django_asgi,
+    "websocket" : AuthMiddlewareStack(URLRouter(ws_urlpatterns))
+})

@@ -1,4 +1,5 @@
 from datetime import datetime
+from asgiref.sync import async_to_sync
 import json
 import requests as rq
 from celery import shared_task
@@ -9,12 +10,13 @@ from django.template import Template, Context
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.templatetags.static import static
+from channels.layers import get_channel_layer
 from ChainControl.models import Approval, Email_templates, Request, Role, Request_type
 from . import integ_1C
 from Autodom import settings
 from pwa_webpush import send_user_notification
 
-
+channel_layer = get_channel_layer()
 
 @shared_task
 def send_request_creator_notification(request_id,email_type):
@@ -46,10 +48,11 @@ def send_request_creator_notification(request_id,email_type):
     )
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
+    notification_subject = Template(email_template.notification_subject).render(Context({"request":el}))
+    notification_text = Template(email_template.notification_text).render(Context({"request":el}))
     if len(el.user.webpush_info.all()) != 0:
         user_list = [el.user,]
-        notification_subject = Template(email_template.notification_subject).render(Context({"request":el}))
-        notification_text = Template(email_template.notification_text).render(Context({"request":el}))
+        
         payload = {"head": notification_subject,
                    "body": notification_text,
                    "icon": static('ChainControl/images/icons/icon.ico'),
@@ -63,8 +66,9 @@ def send_request_creator_notification(request_id,email_type):
     #END PWA BLOCK ################
     #telegram
     #if el.user.userprofile.tg_chat_id is int and len(el.user.userprofile.tg_chat_id)>1:
+    tg_text = Template(email_template.tg_text).render(Context({"request":el}))
     if not el.user.userprofile.tg_chat_id is None:
-        tg_text = Template(email_template.tg_text).render(Context({"request":el}))
+        #tg_text = Template(email_template.tg_text).render(Context({"request":el}))
         data = {"messages": [{"chat_id": el.user.userprofile.tg_chat_id,
                                  "text":tg_text,
                                  "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.id)}),
@@ -74,6 +78,18 @@ def send_request_creator_notification(request_id,email_type):
             msg = f'{el.user} не удалось отправить сообщение в телеграмм'
             mail_admins("send_request_creator_notification",msg)
     
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : reverse('request_item', kwargs={"pk":str(el.id)})
+        }
+    async_to_sync(channel_layer.group_send)(str(el.user.id),{
+        'type' : 'send_notif',
+        'text' : json.dumps(text),
+        })
+
+
     return 'done'
 
 @shared_task
@@ -130,9 +146,10 @@ def send_next_approval_notification(request_id,email_type):
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
     notif_user_list = [x for x in user_list if len(x.webpush_info.all()) != 0]
+    notification_subject = Template(email_template.notification_subject).render(Context({"request":el.request}))
+    notification_text = Template(email_template.notification_text).render(Context({"request":el.request}))
     if len(notif_user_list)>0:
-        notification_subject = Template(email_template.notification_subject).render(Context({"request":el.request}))
-        notification_text = Template(email_template.notification_text).render(Context({"request":el.request}))
+        
         payload = {"head": notification_subject,
                     "body": notification_text,
                     "icon": static('ChainControl/images/icons/icon.ico'),
@@ -156,6 +173,19 @@ def send_next_approval_notification(request_id,email_type):
         if rsp.text=="False":
             msg = f'{el.request} не удалось отправить сообщение в телеграмм' #TODO добавить список пользователей с ошибками в CCTELEGRAMBOT
             mail_admins("send_next_approval_notification",msg)
+
+
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : reverse('request_item', kwargs={"pk":str(el.request.id)})
+        }
+    for usr in user_list:
+        async_to_sync(channel_layer.group_send)(str(usr.id),{
+            'type' : 'send_notif',
+            'text' : json.dumps(text),
+            })
 
     return 'done'
 
@@ -204,6 +234,8 @@ def send_executor_notification(request_id,email_type):
     #END MAIL BLOCK ###############
     #PWA BLOCK ####################
     notif_user_list = [x for x in user_list if len(x.webpush_info.all()) != 0]
+    notification_subject = Template(email_template.notification_subject).render(Context({"request":request}))
+    notification_text = Template(email_template.notification_text).render(Context({"request":request}))
     if len(notif_user_list)>0:
         notification_subject = Template(email_template.notification_subject).render(Context({"request":request}))
         notification_text = Template(email_template.notification_text).render(Context({"request":request}))
@@ -230,6 +262,19 @@ def send_executor_notification(request_id,email_type):
         if rsp.text=="False":
             msg = f'{request} не удалось отправить сообщение в телеграмм' #TODO добавить список пользователей с ошибками в CCTELEGRAMBOT
             mail_admins("send_executor_notification",msg)
+
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : reverse('request_item', kwargs={"pk":str(request.id)})
+        }
+    for usr in user_list:
+        async_to_sync(channel_layer.group_send)(str(usr.id),{
+            'type' : 'send_notif',
+            'text' : json.dumps(text),
+            })
+
     return 'done'
 
 @shared_task
@@ -257,6 +302,8 @@ def send_daily_approval_notification():
         mail_admins("send_daily_approval_notification",msg)
 
     user_list = list(approval_users.filter(webpush_info__isnull=False))
+    notification_subject = email_template.notification_subject
+    notification_text = email_template.notification_text
     if len(user_list)>0:
         notification_subject = email_template.notification_subject
         notification_text = email_template.notification_text
@@ -284,6 +331,19 @@ def send_daily_approval_notification():
             msg = f'не удалось отправить сообщение в телеграмм' #TODO добавить список пользователей с ошибками в CCTELEGRAMBOT
             mail_admins("send_daily_approval_notification",msg)
 
+
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : settings.BASE_URL+reverse('index'),
+        }
+    for usr in approval_users:
+        async_to_sync(channel_layer.group_send)(str(usr.id),{
+            'type' : 'send_notif',
+            'text' : json.dumps(text),
+            })
+
     return 'done'
 
 @shared_task
@@ -310,9 +370,10 @@ def send_deadline_passed_notificaton():
         mail_admins("send_deadline_passed_notificaton",msg)
 
     user_list = list(approval_users.filter(webpush_info__isnull=False))
+    notification_subject = email_template.notification_subject
+    notification_text = email_template.notification_text
     if len(user_list)>0:
-        notification_subject = email_template.notification_subject
-        notification_text = email_template.notification_text
+        
         payload = {"head": notification_subject,
                    "body": notification_text,
                    "icon": static('ChainControl/images/icons/icon.ico'),
@@ -336,6 +397,19 @@ def send_deadline_passed_notificaton():
         if rsp.text=="False":
             msg = f'не удалось отправить сообщение в телеграмм' #TODO добавить список пользователей с ошибками в CCTELEGRAMBOT
             mail_admins("send_deadline_passed_notificaton",msg)
+
+
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : settings.BASE_URL+reverse('index'),
+        }
+    for usr in approval_users:
+        async_to_sync(channel_layer.group_send)(str(usr.id),{
+            'type' : 'send_notif',
+            'text' : json.dumps(text),
+            })
 
     return 'done'
 
@@ -363,9 +437,10 @@ def send_daily_executor_notification():
         mail_admins("send_daily_executor_notification",msg)
 
     user_list = list(approval_users.filter(webpush_info__isnull=False))
+    notification_subject = email_template.notification_subject
+    notification_text = email_template.notification_text
     if len(user_list)>0:
-        notification_subject = email_template.notification_subject
-        notification_text = email_template.notification_text
+        
         payload = {"head": notification_subject,
                    "body": notification_text,
                    "icon": static('ChainControl/images/icons/icon.ico'),
@@ -389,6 +464,18 @@ def send_daily_executor_notification():
         if rsp.text=="False":
             msg = f'не удалось отправить сообщение в телеграмм' #TODO добавить список пользователей с ошибками в CCTELEGRAMBOT
             mail_admins("send_daily_executor_notification",msg)
+
+    #Channels
+    text = {
+        "subject" : notification_subject+"",
+        "text" : notification_text+"",
+        "url" : settings.BASE_URL+reverse('index'),
+        }
+    for usr in approval_users:
+        async_to_sync(channel_layer.group_send)(str(usr.id),{
+            'type' : 'send_notif',
+            'text' : json.dumps(text),
+            })
 
     return 'done'
 

@@ -4,6 +4,7 @@ services:
   web:
     image: killka1997/autodom-img
    
+    command: daphne -b 0.0.0.0 -p 8000 Autodom.wsgi:application
 
     expose:
     - 8000
@@ -151,6 +152,7 @@ services:
     - WEB_URL=http://web:8000
     - HOST=0.0.0.0
     - PORT=6666
+    - TG_ADMIN=753981098
     depends_on:
     - web
 
