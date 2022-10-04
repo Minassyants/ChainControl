@@ -1,0 +1,41 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title %}
+    Информация для согласующих
+{% endblock %}
+
+{% block descr %}
+<p class="h1 text-center">
+    Информация для согласующих
+</p>
+{% endblock %}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="clearfix">
+        <p class="h5" id="variant_1">
+            <b>Инструкция по согласованию заявки</b>
+        </p>
+        <hr />
+        <p>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">
+                    На главном экране открыть заявку из списка "Заявки к согласованию".
+                    <br />
+                    <img src="{% static 'ChainControl/images/approval-img-3.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2" />
+                </li>
+                <li class="list-group-item border-0">В поле "Установленный статус" выбрать новый статус заявки. При установке статуса <mark class=" bg-danger bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Отменена</mark> или <mark class="bg-warning bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На доработке</mark> требуется указать комментарий.
+                    <br />
+                    <img src="{% static 'ChainControl/images/approval-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+                <li class="list-group-item border-0">
+                    Сохранить изменения нажатием кнопки "Изменить статус".
+                    <br />
+                    <img src="{% static 'ChainControl/images/approval-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+            </ol>
+        </p>
+    </div>
+</div>
+{% endblock %}

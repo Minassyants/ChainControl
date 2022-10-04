@@ -45,8 +45,13 @@
                     </li>
                 </ul>
                 {% if user.is_authenticated %}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item ms-auto">
+                        <a class="nav-link active" aria-current="page" href="{% url 'docs' %}">Документация</a>
+                    </li>
+                </ul>
+                <ul class="nav-item dropdown  mb-2 mb-lg-0">
 
-                <ul class="nav-item dropdown ms-auto  mb-2 mb-lg-0">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {{user.first_name}} ({{user.userprofile.role}})
                     </a>

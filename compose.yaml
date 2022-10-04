@@ -52,6 +52,9 @@ services:
       - EMAIL_HOST_USER=info@minassyants.kz
       - EMAIL_HOST_PASSWORD=SyIatpOYi~33
       - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - web
       - redis
@@ -76,6 +79,9 @@ services:
       - EMAIL_HOST_USER=info@minassyants.kz
       - EMAIL_HOST_PASSWORD=SyIatpOYi~33
       - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - web
       - redis
@@ -107,6 +113,9 @@ services:
       - EMAIL_HOST_USER=info@minassyants.kz
       - EMAIL_HOST_PASSWORD=SyIatpOYi~33
       - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - celery
       - redis

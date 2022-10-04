@@ -1,0 +1,84 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title %}
+    Информация для инициаторов
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Информация для инициаторов
+</p>
+{% endblock%}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="clearfix">
+        <p class="h5" id="variant_1">
+            <b>Инструкция по созданию заявки</b>
+        </p>
+        <hr />
+        <p>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">
+                    На главном экране нажать кнопку "Создать заявку".
+                    <br />
+                    <img src="{% static 'ChainControl/images/create-img-3.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2" />
+                </li>
+                <li class="list-group-item border-0">
+                    Внести информацию о заявке. Поля "Комментарий", "Содержание" и "Прикрепленные файлы" могут быть пустыми. Если поле "Валюта" оставить пустым, значение будет взято из договора контрагента.
+                    <br />
+                    <img src="{% static 'ChainControl/images/create-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+                <li class="list-group-item border-0">
+                    Сохранить и отправить заявку на согласование нажатием кнопки "Отправить заявку".
+                    <br />
+                    <img src="{% static 'ChainControl/images/create-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+            </ol>
+        </p>
+        <br />
+        <p class="h5" id="variant_1">
+            <b>Инструкция по изменению заявки</b>
+        </p>
+        <hr />
+        <p>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">
+                    На главном экране открыть заявку из списка "Мои заявки".
+                    <br />
+                    <img src="{% static 'ChainControl/images/change-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2" />
+                </li>
+                <li class="list-group-item border-0">
+                    Внести необходимые изменения.
+                    <br />
+                </li>
+                <li class="list-group-item border-0">
+                    Сохранить заявку нажатием кнопки "Сохранить". <b>При изменении заявки, статус автоматически устанавливается <mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark>!</b>
+                    <br />
+                    <img src="{% static 'ChainControl/images/change-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+            </ol>
+        </p>
+        <br />
+        <p class="h5" id="variant_1">
+            <b>Инструкция по отмене заявки</b>
+        </p>
+        <hr />
+        <p>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">
+                    На главном экране открыть заявку из списка "Мои заявки".
+                    <br />
+                    <img src="{% static 'ChainControl/images/change-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2" />
+                </li>
+                <li class="list-group-item border-0">
+                    Отменить заявку нажатием кнопки "Отменить".
+                    <br />
+                    <img src="{% static 'ChainControl/images/cancel-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+            </ol>
+        </p>
+    </div>
+</div>
+{% endblock %}

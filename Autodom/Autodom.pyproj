@@ -103,6 +103,14 @@
     <Content Include="ChainControl\templates\admin\base.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_form.html" />
     <Content Include="ChainControl\templates\ChainControl\approval_status.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\execution.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\approval.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\request_life_cycle.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\create.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\app_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\request_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\main_screen_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\guide_list.html" />
     <Content Include="ChainControl\templates\ChainControl\email\email.html" />
     <Content Include="ChainControl\templates\ChainControl\request_create_form.html" />
     <Content Include="ChainControl\templates\ChainControl\index.html" />
@@ -173,6 +181,7 @@
     <Folder Include="ChainControl\templates\" />
     <Folder Include="ChainControl\templates\ChainControl\" />
     <Folder Include="ChainControl\templates\ChainControl\email\" />
+    <Folder Include="ChainControl\templates\ChainControl\docs\" />
     <Folder Include="pwa_webpush\" />
     <Folder Include="pwa_webpush\migrations\" />
     <Folder Include="pwa_webpush\migrations\__pycache__\" />

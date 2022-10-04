@@ -1,0 +1,37 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title %}
+    Информация для исполнителей
+{% endblock %}
+
+{% block descr %}
+<p class="h1 text-center">
+    Информация для исполнителей
+</p>
+{% endblock %}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="clearfix">
+        <p class="h5" id="variant_1">
+            <b>Инструкция по выполнению заявки</b>
+        </p>
+        <hr />
+        <p>
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">
+                    На главном экране открыть заявку из списка "Заявки к исполнению".
+                    <br />
+                    <img src="{% static 'ChainControl/images/execution-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2" />
+                </li>
+                <li class="list-group-item border-0">
+                    Отметить заявку как выполненную нажатием кнопки "Выполнить".
+                    <br />
+                    <img src="{% static 'ChainControl/images/execution-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto mt-2 " />
+                </li>
+            </ol>
+        </p>
+    </div>
+</div>
+{% endblock %}

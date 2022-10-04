@@ -1,0 +1,81 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title %}
+    Описание структуры заявки
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Описание структуры заявки
+</p>
+{% endblock%}
+
+ {% block body %}
+
+<div class="container mb-5">
+        <div class="row text-center my-5">
+            <div class="col-12">
+                <img src="{% static 'ChainControl/images/request_description-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto " />
+            </div>
+        </div>
+        <div class="row">
+            <p class="lead">
+                Заявка содержит информацию о согласуемом счете на оплату, контрагенте и ожидаемом сроке исполнения платежа.
+            </p>
+
+            <ol class="list-group">
+                <li class="list-group-item  border-0">
+                    <p class="h5" id="variant_1">
+                        <b>Данные заявки</b>
+                    </p>
+                    <hr />
+                    <ol class="list-group">
+                        <li class="list-group-item border-0">1. Вид заявки – определяет участников согласования данной заявки.</li>
+                        <li class="list-group-item border-0">2. Срок выполнения – срок выполнения данной заявки.</li>
+                        <li class="list-group-item border-0">3. Тип оплаты – тип оплаты по данной заявке.</li>
+                    </ol>
+                </li>
+                <li class="list-group-item  border-0">
+                    <p class="h5" id="variant_1">
+                        <b>Данные о контрагенте</b>
+                    </p>
+                    <hr />
+                    <ol class="list-group">
+                        <li class="list-group-item border-0">4. Контрагент – контрагент, указанный в счете на оплату.</li>
+                        <li class="list-group-item border-0">5. Договор – выбираете договор контрагента.</li>
+                        <li class="list-group-item border-0">6. Номер счета – номер счета контрагента.</li>
+                        <li class="list-group-item border-0">7. Сумма – сумма счета на оплату.</li>
+                        <li class="list-group-item border-0">8. Валюта – валюта счета на оплату.</li>
+                    </ol>
+                </li>
+                <li class="list-group-item  border-0">
+                    <p class="h5" id="variant_1">
+                        <b>Данные счета на оплату</b>
+                    </p>
+                    <hr />
+                    <ol class="list-group">
+                        <li class="list-group-item border-0">9.  Номер счета – номер счета на оплату.</li>
+                        <li class="list-group-item border-0">10. Дата счета – дата счета на оплату.</li>
+                        <li class="list-group-item border-0">11. Дата оказания услуг – дата акта выполненных работ, связанного с счетом на оплату.</li>
+                        <li class="list-group-item border-0">12. Содержание – содержание счета на оплату.</li>
+                    </ol>
+                </li>
+            </ol>
+            </div>
+            <div class="row text-center my-5">
+                <div class="col-12">
+                    <img src="{% static 'ChainControl/images/request_description-img-2.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto " />
+                </div>
+            </div>
+            <div calss="row">
+                <ol class="list-group">
+                    <li class="list-group-item border-0">13. Комментарий – комментарий к заявке.</li>
+                    <li class="list-group-item border-0">14. В заявке присутствует возможность прикрепления 3 файлов.</li>
+                </ol>
+
+            </div>
+
+            
+        </div>
+{% endblock %}

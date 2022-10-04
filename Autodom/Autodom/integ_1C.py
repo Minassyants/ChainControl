@@ -1,12 +1,19 @@
 import requests as rq
 from datetime import datetime
-import json, urllib
+import urllib
 from ChainControl.models import Client, Contract, Bank, Currency, Bank_account
+from . import settings
 
 TOKEN_1C = 'gFsfzvrSayQ7QDTZmax61gdsMWSzwJYOqx5S'
-USER_1C=fr'МА_АДМИН'.encode()
-PASSWORD_1C=fr'741852'.encode()
-ROOT_URL_1C="http://185.233.3.224/Hino_test/odata/standard.odata/"
+try:
+
+    USER_1C=settings.USER_1C.encode()
+    PASSWORD_1C=settings.PASSWORD_1C.encode()
+    ROOT_URL_1C=settings.ROOT_URL_1C
+except:
+    USER_1C=settings.USER_1C
+    PASSWORD_1C=settings.PASSWORD_1C
+    ROOT_URL_1C=settings.ROOT_URL_1C
 
 def delClients():
     clients = Client.objects.filter(request__isnull=True)

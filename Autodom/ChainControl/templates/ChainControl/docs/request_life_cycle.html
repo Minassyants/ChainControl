@@ -1,0 +1,50 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title%}
+    Варианты изменения статуса заявки
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Варианты изменения статуса заявки
+</p>
+{% endblock%}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="clearfix">
+
+        <p class="lead">
+            Заявки имеют несколько вариантов перехода между статусами.
+        </p>
+        <br />
+        <p class="h5" id="variant_1">
+            <b><mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark> -> <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Согласована</mark> -> <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Выполнена</mark></b>
+        </p>
+        <hr />
+        <p>
+            Это самый просто вариант перехода заявки между сатусами. <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Инициатор</mark> создает заявку (статус: <mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark>), заявка одобрена <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующими</mark> (статус: <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Согласована</mark>), <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">исполнитель</mark> выполняет заявку (статус: <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Выполнена</mark>).
+        </p>
+        <br />
+        <br />
+        <p class="h5" id="variant_2">
+            <b><mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark> -> <mark class="bg-warning bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На доработке</mark> -> <mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark></b>
+        </p>
+        <hr />
+        <p>
+            В этом варианте <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующий</mark> отправляет заявку на доработку. <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Инициатору</mark> необходимо отредактировать информацию в заявке и сохранить изменения. После сохранения заявка автоматически вернется в статус <mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark>.
+        </p>
+        <br />
+        <br />
+        <p class="h5" id="variant_3">
+            <b><mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark>/<mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Согласована</mark> -> <mark class=" bg-danger bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Отменена</mark></b>
+        </p>
+        <hr />
+        <p>
+            Заявка может быть отменена в любой момент <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">инициатором</mark> или <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующим</mark> в момент рассмотрения. Исключением являются заявки со статусом <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Выполнена</mark>, они не редактируются.
+        </p>
+
+    </div>
+</div>
+        {% endblock %}

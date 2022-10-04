@@ -1,0 +1,107 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title%}
+    Общие сведения
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Общие сведения
+</p>
+{% endblock%}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="clearfix">
+
+
+        <figure class="figure col-md-5 float-md-end mb-3 ms-md-3 ">
+            <img src="{% static 'ChainControl/images/interaction.svg'%}" alt="..." class="figure-img img-fluid rounded border border-3" />
+            <figcaption class="figure-caption text-end">Упрощенная схема взаимодействия ролей.</figcaption>
+        </figure>
+
+
+
+        <p class="lead">
+            В приложении существуют три функциональные роли: <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">инициатор</mark>, <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующий</mark> и <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">исполнитель</mark>.
+        </p>
+        <p class="h5" id="initiator">
+            <b>Инициатор</b>
+        </p>
+        <hr />
+        <p>
+            Это пользователь, создающий заявки. Пользователь способен просматривать, редактировать и отменять  свои заявки. Инициатор уведомляется о любых изменениях статуса своих заявок.
+        </p>
+
+        <p class="h5" id="approver">
+            <b>Согласующий</b>
+        </p>
+        <hr />
+        <p>
+            Это пользователь, согласующий заявки. Пользователь способен просматривать и согласовывать заявки. Согласующий уведомляется при появляении заявки, ожидающей согласования. Дополнительно получает ежедневные напоминания при наличии несогласованных заявок или заявок с истекшим сроком согласования.
+        </p>
+        <p class="h5" id="executor">
+            <b>Исполнитель</b>
+        </p>
+        <hr />
+        <p>
+            Это пользователь, исполняющий заявки. Пользователь способен просматривать и помечать заявки как выполненные. Исполнитель уведомляется при появляении заявки, ожидающей выполнения. Дополнительно получает ежедневные напоминания при наличии невыполненных заявок.
+        </p>
+        <br />
+        <p class="lead">
+            Каждый пользователь может иметь несколько ролей - быть инициатором одних заявок и/или согласующим для других, и/или исполнителем для третьих. Назнчение ролей пользователям определяются  <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">видами заявки</mark>.
+        </p>
+        <figure class="figure col-md-5 float-md-end mb-3 ms-md-3">
+            <img src="{% static 'ChainControl/images/request_type_example.svg'%}" alt="..." class="figure-img img-fluid rounded border border-3" />
+            <figcaption class="figure-caption text-end">Пример определения вида заявки.</figcaption>
+        </figure>
+        <p class="h5" id="request_type">
+            <b>Вид заявки</b>
+        </p>
+        <hr />
+        <p>
+            Определяет какие пользователи могут быть инициаторами, состав и порядок согласующих пользователей и какие пользователи являются исполнителями.
+        </p>
+        <br />
+        <p class="lead">
+            Каждая заявка имеет один из пяти статусов: <mark class="bg-primary bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На согласовании</mark>, <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Согласована</mark>, <mark class="bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Выполнена</mark>, <mark class=" bg-danger bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">Отменена</mark>, <mark class="bg-warning bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">На доработке</mark>.
+        </p>
+        <p class="h5" id="on_approval">
+            <b>На согласовании</b>
+        </p>
+        <hr />
+        <p>
+            Заявка находится на рассмотрении у <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующих</mark>.
+        </p>
+        <p class="h5" id="approved">
+            <b>Согласована</b>
+        </p>
+        <hr />
+        <p>
+            Заявка рассмотрена и одобрена всеми <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующими</mark>.
+        </p>
+        <p class="h5" id="done">
+            <b>Выполнена</b>
+        </p>
+        <hr />
+        <p>
+            Заявка выполнена <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">исполнителем</mark>.
+        </p>
+        <p class="h5" id="done">
+            <b>Отменена</b>
+        </p>
+        <hr />
+        <p>
+            Заявка была рассмотрена и отклонена <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующим</mark>.
+        </p>
+        <p class="h5" id="done">
+            <b>На доработке</b>
+        </p>
+        <hr />
+        <p>
+            Заявка рассмотрена <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">согласующим</mark> и возвращена <mark class="text-success bg-success bg-opacity-10 border border-success border-opacity-10 rounded-2 text-dark">исполнителю</mark> для уточнения или корректировки информации.
+        </p>
+    </div>
+</div>
+        {% endblock %}

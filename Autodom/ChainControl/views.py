@@ -15,10 +15,6 @@ from django.core.exceptions import PermissionDenied
 from django import forms
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-
-
-
-
 from django.contrib import messages
 from django.db.models import Q, F, Value, CharField,Count
 from django.http import JsonResponse, HttpResponseForbidden
@@ -84,6 +80,40 @@ def tg_reg_user(request):
 @login_required
 def index(request):
     return redirect('requests')
+
+@login_required
+def docs(request):
+    return render(request,'ChainControl/docs/guide_list.html')
+
+@login_required
+def create(request):
+    return render(request,'ChainControl/docs/create.html')
+
+@login_required
+def approval(request):
+    return render(request,'ChainControl/docs/approval.html')
+
+@login_required
+def execution(request):
+    return render(request,'ChainControl/docs/execution.html')
+
+@login_required
+def request_description(request):
+    return render(request,'ChainControl/docs/request_description.html')
+
+@login_required
+def main_screen_description(request):
+    return render(request,'ChainControl/docs/main_screen_description.html')
+
+@login_required
+def app_description(request):
+    return render(request,'ChainControl/docs/app_description.html')
+
+@login_required
+def request_life_cycle(request):
+    return render(request,'ChainControl/docs/request_life_cycle.html')
+
+
 
 
 @login_required

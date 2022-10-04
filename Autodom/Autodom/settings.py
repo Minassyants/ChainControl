@@ -173,6 +173,7 @@ CHANNEL_LAYERS = {
         }}
 
 
+
 #email settings
 EMAIL_HOST = os.environ.get("EMAIL_HOST") 
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
@@ -180,6 +181,11 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = True
 SERVER_EMAIL = EMAIL_HOST_USER
+
+#1c settings
+USER_1C= os.environ.get("USER_1C",fr'МА_АДМИН'.encode())
+PASSWORD_1C= os.environ.get("PASSWORD_1C",fr'741852'.encode())
+ROOT_URL_1C= os.environ.get("ROOT_URL_1C","")
 
 #PWA settings
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'serviceworker.js')

@@ -23,4 +23,12 @@ urlpatterns = [
     path('tg_api/reg_user', views.tg_reg_user, name='tg_reg_user'),
     path('tg_api/logout', views.tg_logout, name='tg_logout'),
     path('tg_api/get_auth_qrcode',views.tg_get_auth_qrcode, name='tg_get_auth_qrcode'),
+    path('CC/docs',views.docs, name='docs'),
+    path('CC/docs/create',views.create, name='create'),
+    path('CC/docs/execution',views.execution, name='execution'),
+    path('CC/docs/approval',views.approval, name='approval'),
+    path('CC/docs/request_description',views.request_description, name='request_description'),
+    path('CC/docs/main_screen_description',views.main_screen_description, name='main_screen_description'),
+    path('CC/docs/app_description',views.app_description, name='app_description'),
+    path('CC/docs/request_life_cycle',views.request_life_cycle, name='request_life_cycle'),
     ]

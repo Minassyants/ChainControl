@@ -1,0 +1,44 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title%}
+    Руководство по использованию системы заявок
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Руководство по использованию системы заявок
+</p>
+{% endblock%}
+
+{% block body %}
+<div class="container mb-5">
+    <div class="row text-center my-5">
+        <div class="col-12">
+            <img src="{% static 'ChainControl/images/guide-img-1.png'%}" alt="..." class="img-fluid rounded border border-3 mx-auto " />
+        </div>
+    </div>
+
+    <p class="lead">
+        На главном экране расположен список заявок, разделенный на три категории - "Заявки на согласование", "Мои заявки" и "Заявки к исполнению".
+    </p>
+    <ol class="list-group">
+        <li class="list-group-item  border-0">
+            <p class="h5" id="variant_1">
+                <b>Описание элементов главного экрана</b>
+            </p>
+            <hr />
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item border-0">Заявки на согласование – список заявок, ожидающих Вашего согласования.</li>
+                <li class="list-group-item border-0">Мои заявки – список заявок, созданных Вами.</li>
+                <li class="list-group-item border-0">Заявки к исполнению – список согласованных заявок, ожидающих Вашего исполнения.</li>
+                <li class="list-group-item border-0">Создать заявку – форма создания новой заявки.</li>
+                <li class="list-group-item border-0">Вход/Выход – вход/выход пользователя из системы.</li>
+                <li class="list-group-item border-0">Телеграм – QR код, при сканировании ведущий в чат с ботом системы заявок.</li>
+                <li class="list-group-item border-0">Уведомления – подписка на уведомления от бразуера о заявках.</li>
+                <li class="list-group-item border-0">Фильтр – форма фильтрации (отбора) текущего списка заявок.</li>
+            </ol>
+        </li>
+    </ol>
+</div>
+        {% endblock %}

@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
 from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History
 from django_celery_beat import admin as celery_admin
+from pwa_webpush.models import PushInformation
 
 class MyAdminSite(admin.AdminSite):
     site_header = 'CC administration'
@@ -75,3 +76,4 @@ admin_site.register(Role)
 admin_site.register(Email_templates)
 admin_site.register(History)
 admin_site.register(celery_admin.PeriodicTask,celery_admin.PeriodicTaskAdmin)
+admin_site.register(PushInformation)

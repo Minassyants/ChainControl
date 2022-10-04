@@ -1,0 +1,43 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+
+{% block title %}
+   Документация
+{% endblock%}
+
+{% block descr%}
+<p class="h1 text-center">
+    Документация
+</p>
+{% endblock%}
+
+{% block body %}
+<div class="container-fluid ps-5">
+
+    <p class="h5">
+        Содержание:
+    </p>
+    <div class="row">
+        <div class="col-md-6">
+            <ol class="list-group list-group-numbered ">
+                <li class="list-group-item  border-0">
+                    Введение
+                    <ol class="list-group list-group-numbered ms-5">
+                        <a class="list-group-item list-group-item-action border-0" href="{% url 'app_description' %}">Общие сведения</a>
+                        <a class="list-group-item list-group-item-action border-0" href="{% url 'request_description' %}">Описание структуры заявки</a>
+                        <a class="list-group-item list-group-item-action border-0" href="{% url 'request_life_cycle' %}">Варианты изменения статуса заявки</a>
+                        <a class="list-group-item list-group-item-action border-0" href="{% url 'main_screen_description' %}">Описание структуры главного экрана</a>
+                    </ol>
+                </li>
+                <a class="list-group-item list-group-item-action border-0" href="{% url 'create' %}">Информация для инициаторов</a>
+
+                <a class="list-group-item list-group-item-action border-0" href="{% url 'approval' %}">Информация для согласующих</a>
+
+                <a class="list-group-item list-group-item-action border-0" href="{% url 'execution' %}">Информация для исполнителей</a>
+
+            </ol>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
