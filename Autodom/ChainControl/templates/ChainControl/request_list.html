@@ -16,7 +16,7 @@
             {% for i in page_obj %}
             <tr style="transform: rotate(0);">
                 <th scope="row">{{ i.id}}</th>
-                <td>{{i.user.first_name}}</td>
+                <td>{{ i.user.last_name }} {{ i.user.first_name|make_list|first }}.</td>
                 <td>{{ i.client.name}}</td>
                 <td>{{ i.sum}} ({{ i.currency}})</td>
                 <td>{{i.complete_before | date:'d M Y'}} <a class="stretched-link" href="{{i.get_absolute_url}}"></a></td>

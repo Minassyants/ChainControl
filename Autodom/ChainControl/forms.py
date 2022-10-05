@@ -126,6 +126,14 @@ class RequestForm(forms.ModelForm):
         self.fields['AVR_date'].required = False
         self.fields['invoice_details'].required = False
 
+        if getattr(self.instance,'type',None) ==None:
+            try:
+                initial = kwargs.get('initial',None)
+                if initial != None:
+                    self.fields['type'].choices = kwargs['initial']['user'].initiator_set.values_list('request_type_id','request_type__name')
+            except:
+                pass
+
         if getattr(self.instance,'contract',None) !=None:
             self.fields['contract'].choices = self.instance.client.contract_set.values_list('id','name')
         else:

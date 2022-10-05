@@ -55,7 +55,7 @@
 
                                     <div class="col-12">
                                         <label for="inputuser" class="form-label">Заявитель</label>
-                                        <strong>{{form.instance.user.first_name}}</strong>
+                                        <strong>{{ form.instance.user.last_name }} {{ form.instance.user.first_name|make_list|first }}.</strong>
                                         {{form.user.as_hidden}}
                                     </div>
                                     <div class="col-12">
@@ -209,7 +209,7 @@
                             <div class="card">
                                 <div class="card-header ">
 
-                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user}}
+                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{ item.user.last_name }} {{ item.user.first_name|make_list|first }}.
 
                                 </div>
                                 <div class="card-body">
@@ -244,7 +244,7 @@
         <div class="card g-3 p-3">
             <div class="card-header ">
 
-                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user}}
+                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{ item.user.last_name }} {{ item.user.first_name|make_list|first }}.
 
             </div>
             <div class="card-body">

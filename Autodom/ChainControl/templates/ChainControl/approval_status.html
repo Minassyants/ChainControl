@@ -7,7 +7,7 @@
         </blockquote>
         <figcaption class="blockquote-footer">
             {% if el.user.first_name %}
-            {{ el.user.first_name}}
+            {{ el.user.last_name }} {{ el.user.first_name|make_list|first }}.
             {% else %}
             {{ el.role}}
             {% endif %}

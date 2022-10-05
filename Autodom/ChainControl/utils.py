@@ -56,8 +56,16 @@ def write_history(request: Request,user : User , status : Request.StatusTypes, c
     History.objects.create(request=request,user=user,status=status,comment=comment, date = datetime.now())
 
 
+def get_ordering_number(role,request_type):
+    try:
+        role_order = request_type.ordering_set.get(role=role).order
+        return role_order
+    except:
+        return -1
+
 def create_intial_approvals(instance):
-    els = Ordering.objects.filter(request_type=instance.type).order_by('order').exclude(user=instance.user).exclude(role=instance.user.userprofile.role)
+    #els = Ordering.objects.filter(request_type=instance.type).order_by('order').exclude(user=instance.user).exclude(role=instance.user.userprofile.role)
+    els = Ordering.objects.filter(request_type=instance.type).order_by('order').exclude(order__lte=get_ordering_number(instance.user.userprofile.role,instance.type))
     if els.count() > 0:
         for el in els:
             Approval.objects.create(user=el.user,role=el.role,order=el.order,request=instance)
@@ -70,5 +78,7 @@ def set_approval_color(els):
     else:
         for el in els:
             el.color = colors[el.status]
+
+
 
     

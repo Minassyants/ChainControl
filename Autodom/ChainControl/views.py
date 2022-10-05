@@ -176,15 +176,21 @@ def get_bank_accounts(request):
 @login_required
 def get_ordering_for_new_request(request):
     if request.method == 'GET':
-        id = request.GET['id']
-        els = Ordering.objects.filter(request_type__id = id).order_by('order')
+        id = request.GET.get('id','')
         ordering = []
-        for el in els:
-            if el.user != None:
-                ordering.append(el.user.first_name)
-            else:
-                ordering.append(el.role.name)
+        if id != '':
+            els = Ordering.objects.filter(request_type__id = id).order_by('order')
+            for el in els:
+                if el.user != None:
+                    ordering.append(f'{el.user.last_name} {el.user.first_name[0]}.')
+                else:
+                    ordering.append(el.role.name)
+        else:
+            ordering.append('Выберите вид заявки.')
+        
+       
         return render(request,'ChainControl/ordering_for_new_request.html',{"ordering":ordering})
+    
 @login_required
 def get_approval_status(request):
     if request.method == 'GET':

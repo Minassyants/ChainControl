@@ -38,7 +38,7 @@
 
                                     <div class="col-12">
                                         <label for="inputuser" class="form-label">Заявитель</label>
-                                        <text class="form-control"><strong>{{object.user.first_name}}</strong></text>
+                                        <text class="form-control"><strong>{{ object.user.last_name }} {{ object.user.first_name|make_list|first }}.</strong></text>
 
                                     </div>
                                     <div class="col-12">
@@ -65,7 +65,7 @@
                                     </div>
                                     <div class="col-12">
                                         <label for="inputcomplete_before" class="form-label">Срок выполнения</label>
-                                        <text class="form-control">{{object.complete_before}}</text>
+                                        <text class="form-control">{{object.complete_before | date:'d M Y'}}</text>
                                     </div>
                                     <div class="col-12">
                                         <label for="inputpayment_type" class="form-label">Тип оплаты</label>
@@ -104,11 +104,11 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label for="inputinvoice_date" class="form-label">Дата счета</label>
-                                            <text class="form-control">{{object.invoice_date}}</text>
+                                            <text class="form-control">{{object.invoice_date | date:'d M Y'}}</text>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="inputAVR_date" class="form-label">Дата оказания услуг</label>
-                                            <text class="form-control">{{object.AVR_date}}</text>
+                                            <text class="form-control">{{object.AVR_date | date:'d M Y'}}</text>
                                         </div>
                                         <div class="col-12">
                                             <label for="inputinvoice_details" class="form-label">Содержание</label>
@@ -179,7 +179,7 @@
                             <div class="card g-3 p-3">
                                 <div class="card-header ">
 
-                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user.first_name}}
+                                    <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{ item.user.last_name }} {{ item.user.first_name|make_list|first }}.
 
                                 </div>
                                 <div class="card-body">
@@ -233,7 +233,7 @@
         <div class="card g-3 p-3">
             <div class="card-header ">
 
-                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{item.user.first_name}}
+                <text class="{{ item.color }}">{{item.get_status_display}}</text> - {{ item.user.last_name }} {{ item.user.first_name|make_list|first }}.
 
             </div>
             <div class="card-body">

@@ -8,6 +8,8 @@
 <script type="text/javascript">
     $(document).ready(function () {
 
+        
+
         $('select').selectize({
             sortField: 'text'
         });
@@ -20,6 +22,11 @@
             });
 
         });
+
+        $(".ordering_for_new_request").empty();
+        $(".ordering_for_new_request").append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
+        $(".ordering_for_new_request").load("{% url 'get_ordering_for_new_request' %}?id=" + $("#id_type").val());
+
     });
 </script>
 {% endblock %}

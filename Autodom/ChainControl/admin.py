@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator
 from django_celery_beat import admin as celery_admin
 from pwa_webpush.models import PushInformation
 
@@ -12,7 +12,9 @@ class MyAdminSite(admin.AdminSite):
 
 admin_site = MyAdminSite(name='CC')
 
-
+class InitiatorInline(admin.TabularInline):
+    model = Initiator
+    extra = 1
 
 class OrderingInline(admin.TabularInline):
     model = Ordering
@@ -31,7 +33,7 @@ class Additional_fileInline(admin.TabularInline):
     extra = 0
 
 class Request_typeAdmin(admin.ModelAdmin):
-    inlines = [OrderingInline]
+    inlines = [OrderingInline, InitiatorInline]
     search_fields = ['name']
 
 class ClientAdmin(admin.ModelAdmin):
