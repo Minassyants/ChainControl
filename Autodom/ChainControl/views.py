@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import base64
 from io import BytesIO
 from django.views.generic.detail import DetailView
@@ -20,11 +20,13 @@ from django.db.models import Q, F, Value, CharField,Count
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 import qrcode
+from Autodom import settings
 from .forms import RequestForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm
 from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, Client
 from . import utils
 from . import periodic_tasks
 from . import russian_strings
+
 
 @login_required
 def tg_get_auth_qrcode(request):
@@ -237,7 +239,7 @@ def get_search_form(request):
 def set_request_done(request, id):
     if request.method == 'POST' and 'done' in request.POST:
         el = get_object_or_404(Request,id=id)
-        if el.status == Request.StatusTypes.APPROVED and el.type.executor == request.user.userprofile.role:
+        if el.status == Request.StatusTypes.APPROVED and el.type.requestexecutor_set.filter(role = request.user.userprofile.role).exists() :
             el.status = Request.StatusTypes.DONE
             el.save()
             utils.write_history(el,request.user,el.status, russian_strings.comment_request_done)
@@ -260,6 +262,18 @@ def set_request_canceled(request, id):
         return redirect(reverse('request_item', kwargs={"pk":str(el.id)}))
     raise PermissionDenied
 
+@login_required
+def request_print(request,pk):
+    obj = get_object_or_404(Request,pk=pk)
+    els = Approval.objects.filter(request__pk = pk).order_by('order')
+    context = {
+        "object":obj,
+        "els":els,
+        "company_name": settings.COMPANY_NAME,
+        }
+    return render(request,'ChainControl/request_print.html',context)
+
+
 @method_decorator(login_required,name='dispatch')
 class RequestDetailView(DetailView):
     model = Request
@@ -268,7 +282,7 @@ class RequestDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        context['user_is_executor'] = self.request.user.userprofile.role == self.object.type.executor and self.object.status == Request.StatusTypes.APPROVED
+        context['user_is_executor'] = self.object.type.requestexecutor_set.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
 
         DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
         context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
@@ -379,7 +393,7 @@ class RequestListView(ListView):
         if mode == 'my_requests':
             qs = qs.filter(user=cur_user)
         elif mode == 'requests_to_be_done':
-            qs =qs.filter(Q(status='AP') & Q(type__executor=cur_user.userprofile.role)).distinct()
+            qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
         elif mode == 'all_requests' and cur_user.is_staff:
             pass
         else:
@@ -413,7 +427,7 @@ class RequestCreateView(CreateView):
         now = datetime.now()
         return {'user':self.request.user,
                 'date':now.date,
-                'complete_before': now+timedelta( days= 3),
+                'complete_before': utils.next_weekday(now),
                 'invoice_date':now,
                 'AVR_date':now,
                 'status':Request.StatusTypes.ON_APPROVAL.value,

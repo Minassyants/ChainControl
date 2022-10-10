@@ -8,13 +8,16 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail, get_connection, EmailMultiAlternatives, mail_admins
 from django.template import Template, Context
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, Sum, Value, DateField
+from django.core.serializers.json import DjangoJSONEncoder
 from django.templatetags.static import static
 from channels.layers import get_channel_layer
-from ChainControl.models import Approval, Email_templates, Request, Role, Request_type
+from ChainControl.models import Approval, Email_templates, Request, Role, Request_type, RequestExecutor, Currency
 from . import integ_1C
 from Autodom import settings
 from pwa_webpush import send_user_notification
+
+
 
 channel_layer = get_channel_layer()
 
@@ -193,11 +196,12 @@ def send_next_approval_notification(request_id,email_type):
 def send_executor_notification(request_id,email_type):
     #MAIL BLOCK #################
     request = get_object_or_404(Request,id=request_id)
-    role = request.type.executor
+    #role = request.type.executor
     no_emails = []
     mail_list = []
     user_list = []
-    usrs = User.objects.filter(userprofile__role = role)
+    #usrs = User.objects.filter(userprofile__role = role)
+    usrs = User.objects.filter(userprofile__role__requestexecutor__request_type= request.type)
 
     email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
 
@@ -286,7 +290,7 @@ def send_daily_approval_notification():
 
     approval_roles = Role.objects.filter(approval__new_status='OA', approval__request__status='OA')
     approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA') | Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email="").values_list('email'))
+    email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []
     
     for i in email_list:
@@ -355,7 +359,7 @@ def send_deadline_passed_notificaton():
 
     approval_roles = Role.objects.filter(approval__new_status='OA',approval__request__status='OA', approval__request__complete_before__lte = datetime.now() )
     approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA', approval__request__complete_before__lte = datetime.now() ) | Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email="").values_list('email'))
+    email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []
     for i in email_list:
         mail_list.append( ( email_subject, email_text, email_html, settings.EMAIL_HOST_USER,i))
@@ -420,9 +424,10 @@ def send_daily_executor_notification():
     email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
-    approval_roles = Request_type.objects.filter(request__status='AP').values('executor')
+    #approval_roles = Request_type.objects.filter(request__status='AP').values('executor')
+    approval_roles = RequestExecutor.objects.filter(request_type__request__status='AP').values('role')
     approval_users = User.objects.filter(Q(userprofile__role__in = approval_roles )).distinct()
-    email_list = list(approval_users.filter(email="").values_list('email'))
+    email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []
     for i in email_list:
         mail_list.append( ( email_subject, email_text, email_html, settings.EMAIL_HOST_USER,i))
@@ -489,6 +494,12 @@ def remove_deleted_from_1C():
     integ_1C.delClients()
     return 'done'
 
+@shared_task
+def send_accounts_payable():
+    accounts_payable = list(Currency.objects.annotate(amount=Sum('request__sum', filter = Q(request__status='AP',)),date=Value(datetime.now(),DateField())).filter(amount__gt=0).values('date','code_str','amount'))
+    jp = json.dumps(accounts_payable,cls= DjangoJSONEncoder)
+    rq.post("https://hino-aa.minassyants.kz/api/update_accounts_payable",json=jp)
+    return 'done'
 
 def send_mass_html_mail(datatuple, fail_silently=False, user=None, password=None, 
                         connection=None):

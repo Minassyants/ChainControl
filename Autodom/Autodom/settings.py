@@ -226,3 +226,5 @@ WEBPUSH_SETTINGS = {
     "VAPID_PRIVATE_KEY":"bwteYyg5Jf6NRaQSpR7RTcbSGZndWP632nMpMW85ZXI",
     "VAPID_ADMIN_EMAIL": "killka1997@gmail.com"
 }
+
+COMPANY_NAME=os.environ.get("COMPANY_NAME",'Default company')

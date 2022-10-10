@@ -9,6 +9,7 @@ urlpatterns = [
     path('CC',views.index, name='index'),
     path('CC/requests/<int:pk>', views.RequestDetailView.as_view(), name="request_item"),
     path('CC/requests/<int:pk>/update', views.RequestUpdateView.as_view(), name="request_update"),
+    path('CC/requests/<int:pk>/print',views.request_print, name='request_print'),
     path('CC/requests', views.requests, name="requests"),
     path('CC/requests_list', views.RequestListView.as_view(), name="request_list"),
     path('api/get_contracts',views.get_contracts,  name="get_contracts"),

@@ -117,6 +117,7 @@
     <Content Include="ChainControl\templates\ChainControl\login_user.html" />
     <Content Include="ChainControl\templates\ChainControl\ordering_for_new_request.html" />
     <Content Include="ChainControl\templates\ChainControl\requests.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_print.html" />
     <Content Include="ChainControl\templates\ChainControl\request_detail.html" />
     <Content Include="ChainControl\templates\ChainControl\request_form.html" />
     <Content Include="ChainControl\templates\ChainControl\request_list.html" />

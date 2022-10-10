@@ -79,7 +79,6 @@ class Bank_account(models.Model):
 
 class Request_type(models.Model):
     name = models.TextField(verbose_name='Наименование',max_length= 100)
-    executor = models.ForeignKey(Role,on_delete=models.SET_NULL,blank=True,null=True, related_name='role_executor')
     roles = models.ManyToManyField(Role,through = 'Ordering')
 
     def __str__(self):
@@ -144,6 +143,10 @@ class Ordering(models.Model):
 
 class Initiator(models.Model):
     user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True,)
+    role = models.ForeignKey(Role, on_delete = models.CASCADE)
+    request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE)
+
+class RequestExecutor(models.Model):
     role = models.ForeignKey(Role, on_delete = models.CASCADE)
     request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE)
 

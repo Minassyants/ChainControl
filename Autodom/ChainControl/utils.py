@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import CharField, Value
 from django.contrib.auth.models import User
 from .models import  Approval,Request,Ordering,History
@@ -79,6 +79,11 @@ def set_approval_color(els):
         for el in els:
             el.color = colors[el.status]
 
-
-
-    
+def next_weekday(d):
+    wednesday = 2 - d.weekday()
+    if wednesday <= 0: # Target day already happened this week
+        wednesday += 7
+    friday = 4 - d.weekday()
+    if friday <= 0:
+        friday += 7
+    return d + timedelta(min(wednesday,friday))

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor
 from django_celery_beat import admin as celery_admin
 from pwa_webpush.models import PushInformation
 
@@ -11,6 +11,10 @@ class MyAdminSite(admin.AdminSite):
     site_title = 'CC admin'
 
 admin_site = MyAdminSite(name='CC')
+
+class RequestExecutorInline(admin.TabularInline):
+    model = RequestExecutor
+    extra = 1
 
 class InitiatorInline(admin.TabularInline):
     model = Initiator
@@ -33,7 +37,7 @@ class Additional_fileInline(admin.TabularInline):
     extra = 0
 
 class Request_typeAdmin(admin.ModelAdmin):
-    inlines = [OrderingInline, InitiatorInline]
+    inlines = [InitiatorInline, OrderingInline, RequestExecutorInline]
     search_fields = ['name']
 
 class ClientAdmin(admin.ModelAdmin):
@@ -78,4 +82,6 @@ admin_site.register(Role)
 admin_site.register(Email_templates)
 admin_site.register(History)
 admin_site.register(celery_admin.PeriodicTask,celery_admin.PeriodicTaskAdmin)
+admin_site.register(celery_admin.IntervalSchedule)
+admin_site.register(celery_admin.CrontabSchedule)
 admin_site.register(PushInformation)
