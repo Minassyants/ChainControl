@@ -495,6 +495,11 @@ def remove_deleted_from_1C():
     return 'done'
 
 @shared_task
+def get_individuals():
+    integ_1C.getIndividuals()
+    return 'done'
+
+@shared_task
 def send_accounts_payable():
     accounts_payable = list(Currency.objects.annotate(amount=Sum('request__sum', filter = Q(request__status='AP',)),date=Value(datetime.now(),DateField())).filter(amount__gt=0).values('date','code_str','amount'))
     jp = json.dumps(accounts_payable,cls= DjangoJSONEncoder)

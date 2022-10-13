@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor, Individual_bank_account, Individual
 from django_celery_beat import admin as celery_admin
 from pwa_webpush.models import PushInformation
 
@@ -24,6 +24,10 @@ class OrderingInline(admin.TabularInline):
     model = Ordering
     extra = 1
 
+class Individual_bank_accountInline(admin.TabularInline):
+    model = Individual_bank_account
+    extra = 0
+
 class Bank_accountInline(admin.TabularInline):
     model = Bank_account
     extra = 0
@@ -39,6 +43,11 @@ class Additional_fileInline(admin.TabularInline):
 class Request_typeAdmin(admin.ModelAdmin):
     inlines = [InitiatorInline, OrderingInline, RequestExecutorInline]
     search_fields = ['name']
+
+class IndividualAdmin(admin.ModelAdmin):
+    inlines = [Individual_bank_accountInline]
+    list_display = ('name',)
+    search_fields = ('name',)
 
 class ClientAdmin(admin.ModelAdmin):
     inlines = [ContractInline,Bank_accountInline]
@@ -58,6 +67,8 @@ class UserProfileInline(admin.StackedInline):
 
 class UserAdmin(AuthUserAdmin):
     inlines = [UserProfileInline]
+    list_display = ('username','first_name','last_name')
+    search_fields = ('username','first_name','last_name')
    
 
 
@@ -67,6 +78,7 @@ class UserAdmin(AuthUserAdmin):
 admin_site.register(User, UserAdmin)
 admin_site.register(Group)
 admin_site.register(UserProfile)
+admin_site.register(Individual, IndividualAdmin)
 admin_site.register(Client,ClientAdmin)
 admin_site.register(Contract)
 admin_site.register(Bank)
