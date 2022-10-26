@@ -5,13 +5,13 @@
 {% endblock %}
 
 {% block scripts %}
-{% if user_is_executor %}
+
 <script type="text/javascript">
     function CallPrint(id) {
         var WinPrint = window.open('' + id + '/print', '', 'left=50,top=50,width=800,height=640,toolbar=0,scrollbars=1,status=0');
     }
 </script>
-{% endif %}
+
 {% endblock %}
 
 {% block descr %}
@@ -21,9 +21,9 @@
 <p class="h4 text-center">
     {{object.get_status_display}}
 </p>
-{% if user_is_executor %}
+
 <a onClick="javascript:CallPrint('{{object.id}}');"><img src="{% static 'ChainControl/images/printer.svg' %}" /> Печать</a>
-{% endif %}
+
 {% endblock %}
 
 {% block body %}
@@ -92,14 +92,29 @@
                                             <label for="inputclient" class="form-label">Контрагент</label>
                                             <text class="form-control">{{object.client}}</text>
                                         </div>
-                                        <div class="col-12">
+                                        {% if object.is_accountable_person %}
+                                        <div class="col-12" id="individual_div">
+                                            <label for="inputindividual" class="form-label"><strong>Подотчетное лицо</strong></label>
+                                            <text class="form-control">{{object.individual}}</text>
+                                        </div>
+                                        {% if object.payment_type.cashless %}
+                                        <div class="col-12" id="individual_bank_account_div">
+                                            <label for="inputindividual_bank_account" class="form-label"><strong>Карт-счет</strong></label>
+                                            <text class="form-control">{{object.individual_bank_account}}</text>
+                                        </div>
+                                        {% endif %}
+                                        {% else %}
+                                        <div class="col-12" id="contract_div">
                                             <label for="inputcontract" class="form-label">Договор</label>
                                             <text class="form-control">{{object.contract}}</text>
                                         </div>
-                                        <div class="col-12">
+                                        {% if object.payment_type.cashless %}
+                                        <div class="col-12" id="bank_account_div">
                                             <label for="inputbank_account" class="form-label">Номер счета</label>
                                             <text class="form-control">{{object.bank_account}}</text>
                                         </div>
+                                        {% endif %}
+                                        {% endif %}
                                     </div>
                                 </fieldset>
                             </div>
@@ -255,7 +270,9 @@
 </div>
 <script type="text/javascript">
 
+
     $(".approval-status").load("{% url 'get_approval_status' %}?id={{ object.id }}");
+
 
     {% if approving_user %}
     $('#approval_form').load("{% url 'get_approval_form' id=approving_user|default:'-1' %}", function () {

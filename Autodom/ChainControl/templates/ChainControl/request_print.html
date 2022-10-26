@@ -57,12 +57,25 @@
                                         <div class="col-12">
                                             <p>Контрагент: {{object.client}}</p>
                                         </div>
+                                        {% if object.is_accountable_person %}
+                                        <div class="col-12">
+                                            <p>Подотчетное лицо: {{object.individual}}</p>
+                                        </div>
+                                        {% if object.payment_type.cashless %}
+                                        <div class="col-12">
+                                            <p>Карт-счет: {{object.individual_bank_account}}</p>
+                                        </div>
+                                        {% endif %}
+                                        {% else %}
                                         <div class="col-12">
                                             <p>Договор: {{object.contract}}</p>
                                         </div>
+                                        {% if object.payment_type.cashless %}
                                         <div class="col-12">
                                             <p>Номер счета: {{object.bank_account}}</p>
                                         </div>
+                                        {% endif %}
+                                        {% endif %}
                                     </div>
                                 </fieldset>
                             </div>

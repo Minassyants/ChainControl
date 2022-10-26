@@ -22,7 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 import qrcode
 from Autodom import settings
 from .forms import RequestForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm
-from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, Client
+from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, Client, Individual, Individual_bank_account
 from . import utils
 from . import periodic_tasks
 from . import russian_strings
@@ -155,6 +155,13 @@ def logout_user(request):
     return redirect('login_user')
 
 @login_required
+def get_individuals(request):
+    if request.method == 'GET':
+        
+        els = list(Individual.objects.all().values('id','name').annotate(value=F('id'),text=F('name')))
+        return JsonResponse(els, safe=False)
+
+@login_required
 def get_clients(request):
     if request.method == 'GET':
         
@@ -166,6 +173,13 @@ def get_contracts(request):
     if request.method == 'GET':
         id = request.GET['id']
         els = list(Contract.objects.filter(client__id = id).values('id','name').annotate(value=F('id'),text=F('name')))
+        return JsonResponse(els, safe=False)
+
+@login_required
+def get_individual_bank_accounts(request):
+    if request.method == 'GET':
+        id = request.GET['id']
+        els = list(Individual_bank_account.objects.filter(individual__id = id).values('id','account_number').annotate(value=F('id'),text=F('account_number')))
         return JsonResponse(els, safe=False)
 
 @login_required
@@ -423,6 +437,7 @@ class RequestCreateView(CreateView):
     template_name_suffix = '_create_form'
     
 
+
     def get_initial(self):
         now = datetime.now()
         return {'user':self.request.user,
@@ -443,15 +458,31 @@ class RequestCreateView(CreateView):
         addfiles = AdditionalFileInlineFormset(request.POST,request.FILES, instance=form.instance)
         # check whether it's valid:
         if form.is_valid() :
-            obj = form.save(commit = False)
-            if obj.currency == None:
-                obj.currency = obj.contract.currency
-            obj.user = request.user
-            form.save()
+            self.object = form.save(commit = False)
+            self.object.user = request.user
+            if self.object.is_accountable_person:
+                if self.object.individual == None or (self.object.payment_type.cashless and self.object.individual_bank_account == None):
+                    messages.warning(request,'Не заполнена информация о подотчетном лице.')
+                    return self.form_invalid(self.get_form())
+            else:
+                if self.object.contract == None or (self.object.payment_type.cashless and self.object.bank_account == None):
+                    messages.warning(request,'Не заполнена информация о контрагенте.')
+                    return self.form_invalid(form)
+
+            if self.object.currency == None:
+                if self.object.contract != None and self.object.contract.currency != None:
+                    self.object.currency = self.object.contract.currency
+                else:
+                    messages.warning(request,'В договоре не указана валюта. Необходимо указать валюту в заявке.')
+                    return self.form_invalid(form)
+
+            
+            
+            self.object.save()
             if addfiles.is_valid():
                 files = addfiles.save(commit = False)
                 for file in files:
-                    file.request_1 = obj
+                    file.request_1 = self.object
                     file.save()
                 messages.success(request,'Заявка создана')
                 return self.form_valid(form)

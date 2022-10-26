@@ -100,6 +100,8 @@ class RequestForm(forms.ModelForm):
     comment = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control',
                                                            'rows':'2',
                                                                    }))
+    is_accountable_person = forms.BooleanField(widget=forms.CheckboxInput(attrs={'class' : 'form-check-input',
+                                                 }))
 
     class Meta:
         model = models.Request
@@ -110,6 +112,8 @@ class RequestForm(forms.ModelForm):
             'payment_type' : forms.Select(),
             'client' : forms.Select(),
             'contract' : forms.Select(),
+            'individual' : forms.Select(),
+            'individual_bank_account' : forms.Select(),
             'bank_account' : forms.Select(),
             'sum' : forms.NumberInput(attrs={'class' : 'form-control',}),
             'date' : forms.DateInput(format='%Y-%m-%d'),
@@ -120,7 +124,8 @@ class RequestForm(forms.ModelForm):
 
     def __init__(self, *args , **kwargs):
         super(RequestForm, self).__init__(*args, **kwargs)
-
+        self.fields['bank_account'].required = False
+        self.fields['is_accountable_person'].required = False
         self.fields['currency'].required = False
         self.fields['comment'].required = False
         self.fields['AVR_date'].required = False
@@ -148,6 +153,16 @@ class RequestForm(forms.ModelForm):
             self.fields['client'].choices = [ (str(self.instance.client.id), str(self.instance.client )) ]
         else:
             self.fields['client'].choices = [("","----")]
+
+        if getattr(self.instance,'individual_bank_account',None) !=None:
+            self.fields['individual_bank_account'].choices = self.instance.individual.individual_bank_account_set.values_list('id','account_number')
+        else:
+            self.fields['individual_bank_account'].choices = [("","----")]
+
+        if getattr(self.instance,'individual',None) !=None:
+            self.fields['individual'].choices = [ (str(self.instance.individual.id), str(self.instance.individual )) ]
+        else:
+            self.fields['individual'].choices = [("","----")]
 
     
        

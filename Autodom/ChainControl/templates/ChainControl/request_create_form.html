@@ -14,6 +14,35 @@
             sortField: 'text'
         });
 
+        if ($("#id_is_accountable_person").is(":checked")) {
+            $("#id_contract").removeAttr('required');
+
+
+            $("#id_contract").selectize()[0].selectize.clear();
+            $("#id_bank_account").selectize()[0].selectize.clear();
+
+            $("#id_individual").attr('required', '');
+
+
+            $("#contract_div").toggle();
+            $("#bank_account_div").toggle();
+
+
+        }
+        else {
+            $("#id_contract").attr('required', '');
+
+
+            $("#id_individual").removeAttr('required');
+
+
+            $("#id_individual").selectize()[0].selectize.clear();
+            $("#id_individual_bank_account").selectize()[0].selectize.clear();
+
+            $("#individual_div").toggle();
+            $("#individual_bank_account_div").toggle();
+        };
+
         $.getJSON("{% url 'get_clients' %}", function (Clients) {
 
             $("#id_client").selectize()[0].selectize.clearOptions();
@@ -22,6 +51,18 @@
             });
 
         });
+
+        $.getJSON("{% url 'get_individuals' %}", function (Clients) {
+
+            $("#id_individual").selectize()[0].selectize.clearOptions();
+            $("#id_individual").selectize()[0].selectize.load(function (callback) {
+                callback(Clients);
+            });
+
+        });
+
+        
+
 
         $(".ordering_for_new_request").empty();
         $(".ordering_for_new_request").append("<div class=\"d-flex justify-content-center\"><div class=\"spinner-grow\" role=\"status\"><span class= \"visually-hidden\"> Loading...</span></div></div>");
@@ -92,17 +133,29 @@
                         <fieldset>
                             <legend> Данные о контрагенте</legend>
                             <div class="row g-3">
-                                <div class="col-12">
+                                <div class="col-8">
                                     <label for="inputclient" class="form-label">Контрагент</label>
                                     {{form.client}}
                                 </div>
-                                <div class="col-12">
+                                <div class="col-4">
+                                    <label for="is_accountable_person" class="form-label">Подотчет</label><br />
+                                    {{form.is_accountable_person}}
+                                </div>
+                                <div class="col-12" id="contract_div">
                                     <label for="inputcontract" class="form-label">Договор</label>
                                     {{form.contract}}
                                 </div>
-                                <div class="col-12">
+                                <div class="col-12" id="bank_account_div">
                                     <label for="inputbank_account" class="form-label">Номер счета</label>
                                     {{form.bank_account}}
+                                </div>
+                                <div class="col-12" id="individual_div">
+                                    <label for="inputindividual" class="form-label"><strong>Подотчетное лицо</strong></label>
+                                    {{form.individual}}
+                                </div>
+                                <div class="col-12" id="individual_bank_account_div">
+                                    <label for="inputindividual_bank_account" class="form-label"><strong>Карт-счет</strong></label>
+                                    {{form.individual_bank_account}}
                                 </div>
                             </div>
                         </fieldset>
@@ -201,6 +254,7 @@
     $("#id_type").oldValue = $("#id_type").val();
     $("#id_contract").selectize()[0].selectize.clearOptions();
     $("#id_bank_account").selectize()[0].selectize.clearOptions();
+    $("#id_individual_bank_account").selectize()[0].selectize.clearOptions();
     $("#id_client").on("change", function () {
         $.getJSON("{% url 'get_contracts' %}?id=" + $(this).val(), function (Contracts) {
             $("#id_contract").selectize()[0].selectize.clear();
@@ -217,6 +271,17 @@
             });
         });
     });
+
+    $("#id_individual").on("change", function () {
+        $.getJSON("{% url 'get_individual_bank_accounts' %}?id=" + $(this).val(), function (Contracts) {
+            $("#id_individual_bank_account").selectize()[0].selectize.clear();
+            $("#id_individual_bank_account").selectize()[0].selectize.clearOptions();
+            $("#id_individual_bank_account").selectize()[0].selectize.load(function (callback) {
+                callback(Contracts);
+            });
+        });
+    });
+
     $("#id_type").on("change", function () {
         
         if ($(this).oldValue != $(this).val())
@@ -229,6 +294,32 @@
         }
         
     });
+    $("#id_is_accountable_person").on("change", function () {
+        if ($(this).is(":checked")) {
+            $("#id_contract").removeAttr('required');
+
+            $("#id_contract").selectize()[0].selectize.clear();
+            $("#id_bank_account").selectize()[0].selectize.clear();
+
+            $("#id_individual").attr('required', '');
+            
+
+            
+        }
+        else {
+            $("#id_contract").attr('required', '');
+
+            $("#id_individual").removeAttr('required');
+
+            $("#id_individual").selectize()[0].selectize.clear();
+            $("#id_individual_bank_account").selectize()[0].selectize.clear();
+        };
+
+        $("#contract_div").toggle();
+        $("#bank_account_div").toggle();
+        $("#individual_div").toggle();
+        $("#individual_bank_account_div").toggle();
+    })
    
 </script>
 {% endblock %}

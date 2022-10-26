@@ -66,7 +66,7 @@ class Contract(models.Model):
     guid = models.CharField(verbose_name = 'ГУИД 1с',max_length = 36)
     client = models.ForeignKey(Client,on_delete = models.CASCADE, verbose_name='Контрагент')
     name= models.CharField(verbose_name='Наименование',max_length = 200)
-    number = models.CharField(verbose_name='Номер договора',max_length = 20,blank=True,null=True)
+    number = models.CharField(verbose_name='Номер договора',max_length = 150,blank=True,null=True)
     date = models.DateField(verbose_name='Дата договора',blank=True,null=True)
     start_date = models.DateField(verbose_name='Дата начала',blank=True,null=True)
     end_date = models.DateField(verbose_name = 'Дата окончания',blank=True,null=True)
@@ -82,7 +82,7 @@ class Contract(models.Model):
 class Bank(models.Model):
     guid = models.CharField(verbose_name = 'ГУИД 1с',max_length = 36)
     name = models.CharField(verbose_name='Наименование',max_length = 200)
-    BIK = models.CharField(verbose_name = 'БИК',max_length = 10)
+    BIK = models.CharField(verbose_name = 'БИК',max_length = 20)
 
     def __str__(self):
         return self.name +", "+self.BIK
@@ -96,6 +96,7 @@ class Bank(models.Model):
 
 class Payment_type(models.Model):
     name = models.CharField(verbose_name='Наименование',max_length = 50)
+    cashless = models.BooleanField(verbose_name= 'Это безналичный расчет', default=False)
 
     def __str__(self):
         return self.name
@@ -143,13 +144,20 @@ class Request_type(models.Model):
         verbose_name_plural = 'Виды заявок'
 
 class Request(models.Model):
+    class StatusTypes(models.TextChoices):
+        OPEN = 'OP', _('Открыта')
+        ON_APPROVAL = 'OA', _('На согласовании')
+        APPROVED = 'AP', _('Согласована')
+        ON_REWORK = 'OR', _('На доработке')
+        CANCELED = 'CA', _('Отменена')
+        DONE = 'DO', _('Выполнена')
     user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
     date = models.DateField(verbose_name='Дата создания',default=datetime.now,blank=True)
     type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
     payment_type = models.ForeignKey(Payment_type, on_delete = models.CASCADE, verbose_name='Тип оплаты')
     client = models.ForeignKey(Client, on_delete = models.CASCADE, verbose_name='Контрагент')
-    contract = models.ForeignKey(Contract, on_delete = models.CASCADE, verbose_name='Договор')
-    bank_account = models.ForeignKey(Bank_account, on_delete = models.CASCADE, verbose_name='Банковский счет')
+    contract = models.ForeignKey(Contract, on_delete = models.CASCADE, verbose_name='Договор',blank=True,null=True)
+    bank_account = models.ForeignKey(Bank_account, on_delete = models.CASCADE, verbose_name='Банковский счет',blank=True,null=True)
     complete_before = models.DateField(verbose_name='Завершить до')
     invoice_number = models.CharField(verbose_name='Номер счета на оплату', max_length = 20)
     invoice_date = models.DateField(verbose_name='Дата счета на оплату')
@@ -158,16 +166,11 @@ class Request(models.Model):
     sum = models.FloatField(verbose_name = 'Сумма')
     comment = models.CharField(verbose_name ='Комментарий',max_length = 200,blank=True,null=True)
     currency = models.ForeignKey(Currency, on_delete = models.CASCADE,verbose_name='Валюта',blank=True,null=True)
-    
-    class StatusTypes(models.TextChoices):
-        OPEN = 'OP', _('Открыта')
-        ON_APPROVAL = 'OA', _('На согласовании')
-        APPROVED = 'AP', _('Согласована')
-        ON_REWORK = 'OR', _('На доработке')
-        CANCELED = 'CA', _('Отменена')
-        DONE = 'DO', _('Выполнена')
-
     status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.ON_APPROVAL)
+    is_accountable_person = models.BooleanField(verbose_name='Оплата подотчетному лицу', default= False)
+    individual = models.ForeignKey(Individual, on_delete = models.CASCADE, verbose_name='Физ. лицо', blank= True, null= True)
+    individual_bank_account = models.ForeignKey(Individual_bank_account, on_delete= models.CASCADE, verbose_name='Карт-счет', blank= True, null= True)
+
     
 
     def __str__(self):
