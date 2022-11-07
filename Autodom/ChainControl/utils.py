@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from django.db.models import CharField, Value
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from .models import  Approval,Request,Ordering,History
 from . import russian_strings, periodic_tasks
@@ -14,15 +15,15 @@ colors = {
 
 
 def reset_request_approvals(instance):
-    for el in instance.approval_set.all():
+    for el in instance.approval.all():
         el.new_status = Request.StatusTypes.ON_APPROVAL
         el.save()
 
 def update_request_status(instance,approval,comment = None):
-    total_count = instance.approval_set.count()
-    approved_count = instance.approval_set.filter(new_status = Request.StatusTypes.APPROVED).count()
-    rework_count = instance.approval_set.filter(new_status = Request.StatusTypes.ON_REWORK).count()
-    cancel_count = instance.approval_set.filter(new_status = Request.StatusTypes.CANCELED).count()
+    total_count = instance.approval.count()
+    approved_count = instance.approval.filter(new_status = Request.StatusTypes.APPROVED).count()
+    rework_count = instance.approval.filter(new_status = Request.StatusTypes.ON_REWORK).count()
+    cancel_count = instance.approval.filter(new_status = Request.StatusTypes.CANCELED).count()
     if approved_count == total_count:
         instance.status = Request.StatusTypes.APPROVED
         instance.save()
@@ -34,7 +35,7 @@ def update_request_status(instance,approval,comment = None):
         instance.status = Request.StatusTypes.ON_REWORK
         periodic_tasks.send_approval_status_on_rework_notification(instance)
         instance.save()
-        instance.approval_set.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
+        instance.approval.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
         write_history(request = instance,user = approval.user, status = instance.status, comment= comment if comment else russian_strings.comment_request_on_rework)
         return
 
@@ -42,7 +43,7 @@ def update_request_status(instance,approval,comment = None):
         instance.status = Request.StatusTypes.CANCELED
         periodic_tasks.send_request_canceled_notification(instance)
         instance.save()
-        instance.approval_set.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
+        instance.approval.all().update(new_status=Request.StatusTypes.ON_APPROVAL)
         write_history(request = instance,user = approval.user, status = instance.status, comment= comment if comment else russian_strings.comment_request_canceled)
         return
         
@@ -65,10 +66,10 @@ def get_ordering_number(role,request_type):
 
 def create_intial_approvals(instance):
     #els = Ordering.objects.filter(request_type=instance.type).order_by('order').exclude(user=instance.user).exclude(role=instance.user.userprofile.role)
-    els = Ordering.objects.filter(request_type=instance.type).order_by('order').exclude(order__lte=get_ordering_number(instance.user.userprofile.role,instance.type))
+    els = Ordering.objects.filter(content_type=ContentType.objects.get_for_model(instance.type).id,object_id=instance.type.id).order_by('order').exclude(order__lte=get_ordering_number(instance.user.userprofile.role,instance.type))
     if els.count() > 0:
         for el in els:
-            Approval.objects.create(user=el.user,role=el.role,order=el.order,request=instance)
+            Approval.objects.create(user=el.user,role=el.role,order=el.order,request=instance, can_edit=el.can_edit)
 
 def set_approval_color(els):
     els.annotate(color=Value('xxx', output_field=CharField()))

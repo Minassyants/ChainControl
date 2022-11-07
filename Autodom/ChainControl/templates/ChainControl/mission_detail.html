@@ -1,7 +1,7 @@
 {% extends 'ChainControl/index.html' %}
 {% load static %}
 {% block title %}
-Заявка #{{object.id}} от {{object.date | date:'d M Y'}} г.
+Заявка на командирование #{{object.id}} от {{object.date | date:'d M Y'}} г.
 {% endblock %}
 
 {% block scripts %}
@@ -77,8 +77,8 @@
                                         <text class="form-control">{{object.complete_before | date:'d M Y'}}</text>
                                     </div>
                                     <div class="col-12">
-                                        <label for="inputpayment_type" class="form-label">Тип оплаты</label>
-                                        <text class="form-control">{{object.payment_type}}</text>
+                                        <label for="inputindividual" class="form-label">Ф.И.О. командируемого</label>
+                                        <text class="form-control">{{object.individual.name}}</text>
                                     </div>
                                 </fieldset>
                             </div>
@@ -89,32 +89,18 @@
                                     <legend> Данные о контрагенте</legend>
                                     <div class="row g-3">
                                         <div class="col-12">
+                                            <label for="inputdestination" class="form-label">Направление</label>
+                                            <text class="form-control">{{object.destination}}</text>
+                                        </div>
+                                        <div class="col-12">
                                             <label for="inputclient" class="form-label">Контрагент</label>
                                             <text class="form-control">{{object.client}}</text>
                                         </div>
-                                        {% if object.is_accountable_person %}
-                                        <div class="col-12" id="individual_div">
-                                            <label for="inputindividual" class="form-label"><strong>Подотчетное лицо</strong></label>
-                                            <text class="form-control">{{object.individual}}</text>
+                                        <div class="col-12">
+                                            <label for="inputpurpose" class="form-label">Цель командировки</label>
+                                            <text class="form-control">{{object.purpose}}</text>
                                         </div>
-                                        {% if object.payment_type.cashless %}
-                                        <div class="col-12" id="individual_bank_account_div">
-                                            <label for="inputindividual_bank_account" class="form-label"><strong>Карт-счет</strong></label>
-                                            <text class="form-control">{{object.individual_bank_account}}</text>
-                                        </div>
-                                        {% endif %}
-                                        {% else %}
-                                        <div class="col-12" id="contract_div">
-                                            <label for="inputcontract" class="form-label">Договор</label>
-                                            <text class="form-control">{{object.contract}}</text>
-                                        </div>
-                                        {% if object.payment_type.cashless %}
-                                        <div class="col-12" id="bank_account_div">
-                                            <label for="inputbank_account" class="form-label">Номер счета</label>
-                                            <text class="form-control">{{object.bank_account}}</text>
-                                        </div>
-                                        {% endif %}
-                                        {% endif %}
+
                                     </div>
                                 </fieldset>
                             </div>
@@ -122,21 +108,25 @@
                                 <fieldset>
                                     <legend> Данные счета на оплату</legend>
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label for="inputinvoice_number" class="form-label">Номер счета</label>
-                                            <text class="form-control">{{object.invoice_number}}</text>
+                                        <div class="col-md-6">
+                                            <label for="inputinvoice_number" class="form-label">Дата начала</label>
+                                            <text class="form-control">{{object.date_from | date:'d M Y'}}</text>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label for="inputinvoice_date" class="form-label">Дата счета</label>
-                                            <text class="form-control">{{object.invoice_date | date:'d M Y'}}</text>
+                                        <div class="col-md-6">
+                                            <label for="inputinvoice_date" class="form-label">Дата окончания</label>
+                                            <text class="form-control">{{object.date_to | date:'d M Y'}}</text>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label for="inputAVR_date" class="form-label">Дата оказания услуг</label>
-                                            <text class="form-control">{{object.AVR_date | date:'d M Y'}}</text>
+                                        <div class="col-md-12">
+                                            <label for="inputticker_price" class="form-label">Стоимость билетов</label>
+                                            <text class="form-control">{{object.ticket_price}}</text>
                                         </div>
                                         <div class="col-12">
-                                            <label for="inputinvoice_details" class="form-label">Содержание</label>
-                                            <text class="form-control">{{object.invoice_details}}</text>
+                                            <label for="inputcost_of_living" class="form-label">Стоимость проживания</label>
+                                            <text class="form-control">{{object.cost_of_living}}</text>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="inputdaily_allowance" class="form-label">Суточные</label>
+                                            <text class="form-control">{{object.daily_allowance}}</text>
                                         </div>
                                     </div>
                                 </fieldset>
@@ -144,16 +134,7 @@
                         </div>
                         <div class="col-12">
                             <fieldset>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <label for="inputsum" class="form-label">Сумма</label>
-                                        <text class="form-control">{{object.sum}}</text>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="inputsum" class="form-label">Валюта</label>
-                                        <text class="form-control">{{object.currency}}</text>
-                                    </div>
-                                </div>
+                                
                                 <div class="col-md-12">
                                     <label for="inputcomment" class="form-label">Комментарий</label>
                                     <text class="form-control">{{object.comment}}</text>

@@ -40,84 +40,56 @@
                                         <p>Вид заявки: {{object.type}}</p>
 
                                     </div>
-
-
-                                    <div class="col-12">
-                                        <p>Тип оплаты: {{object.payment_type}}</p>
-                                    </div>
                                 </fieldset>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <fieldset>
-                                    <p class="h4"> Данные о контрагенте</p>
+                                    <!--<p class="h4"> Данные о контрагенте</p>-->
                                     <br />
                                     <div class="row">
+
+
+                                        <div class="col-12">
+                                            <p>Командируемый: {{object.individual}}</p>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <p>Направление: {{object.destination}}</p>
+                                        </div>
+
                                         <div class="col-12">
                                             <p>Контрагент: {{object.client}}</p>
                                         </div>
-                                        {% if object.is_accountable_person %}
                                         <div class="col-12">
-                                            <p>Подотчетное лицо: {{object.individual}}</p>
-                                        </div>
-                                        {% if object.payment_type.cashless %}
-                                        <div class="col-12">
-                                            <p>Карт-счет: {{object.individual_bank_account}}</p>
-                                        </div>
-                                        {% endif %}
-                                        {% else %}
-                                        <div class="col-12">
-                                            <p>Договор: {{object.contract}}</p>
-                                        </div>
-                                        {% if object.payment_type.cashless %}
-                                        <div class="col-12">
-                                            <p>Номер счета: {{object.bank_account}}</p>
-                                        </div>
-                                        {% endif %}
-                                        {% endif %}
-                                    </div>
-                                </fieldset>
-                            </div>
-                            <div class="col-md-12">
-                                <fieldset>
-                                    <p class="h4"> Данные счета на оплату</p>
-                                    <br />
-                                    <div class="row">
-                                        <div class="col-md-4">
-
-                                            <p>Номер счета: {{object.invoice_number}}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <p>Дата счета: {{object.invoice_date | date:'d M Y'}}</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <p>Дата оказания услуг: {{object.AVR_date | date:'d M Y'}}</p>
+                                            <p>Цель командировки: {{object.purpose}}</p>
                                         </div>
                                         <div class="col-12">
-                                            <p>Содержание: {{object.invoice_details}}</p>
+                                            <p>Дата начала: {{object.date_from}}</p>
                                         </div>
                                         <div class="col-12">
-                                            <p>Комментарий: {{object.comment}}</p>
+                                            <p>Дата окончания: {{object.date_to}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Стоимость билетов: {{object.ticket_price}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Стоимость проживания: {{object.cost_of_living}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Суточные: {{object.daily_allowance}}</p>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label for="inputcomment" class="form-label">Комментарий</label>
+                                            {{object.comment}}
                                         </div>
                                     </div>
                                 </fieldset>
                             </div>
+                            
                         </div>
 
-                        <div class="col-12">
-                            <fieldset>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <p>Сумма: {{object.sum}}</p>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <p>Валюта: {{object.currency}}</p>
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </div>
-                        
                         <div class="col-12">
                             <br />
                             <p class="h4">Участники согласования</p>

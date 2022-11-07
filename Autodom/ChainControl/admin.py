@@ -1,8 +1,9 @@
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor, Individual_bank_account, Individual
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor, Individual_bank_account, Individual, Mission, Mission_type
 from django_celery_beat import admin as celery_admin
 from pwa_webpush.models import PushInformation
 
@@ -12,15 +13,15 @@ class MyAdminSite(admin.AdminSite):
 
 admin_site = MyAdminSite(name='CC')
 
-class RequestExecutorInline(admin.TabularInline):
+class RequestExecutorInline(GenericTabularInline):
     model = RequestExecutor
     extra = 1
 
-class InitiatorInline(admin.TabularInline):
+class InitiatorInline(GenericTabularInline):
     model = Initiator
     extra = 1
 
-class OrderingInline(admin.TabularInline):
+class OrderingInline(GenericTabularInline):
     model = Ordering
     extra = 1
 
@@ -36,9 +37,13 @@ class ContractInline(admin.TabularInline):
     model = Contract
     extra = 0
 
-class Additional_fileInline(admin.TabularInline):
+class Additional_fileInline(GenericTabularInline):
     model = Additional_file
     extra = 0
+
+class Mission_typeAdmin(admin.ModelAdmin):
+    inlines = [InitiatorInline, OrderingInline, RequestExecutorInline]
+    search_fields = ['name']
 
 class Request_typeAdmin(admin.ModelAdmin):
     inlines = [InitiatorInline, OrderingInline, RequestExecutorInline]
@@ -53,6 +58,11 @@ class ClientAdmin(admin.ModelAdmin):
     inlines = [ContractInline,Bank_accountInline]
     list_display = ('name','biin')
     search_fields = ['name','biin']
+
+class MissionAdmin(admin.ModelAdmin):
+    inlines = [Additional_fileInline]
+    list_display = ('client','individual')
+    search_fields = ('client.name','individual.name')
 
 class RequestAdmin(admin.ModelAdmin):
     inlines = [Additional_fileInline]
@@ -85,7 +95,9 @@ admin_site.register(Bank)
 admin_site.register(Currency)
 admin_site.register(Bank_account)
 admin_site.register(Request,RequestAdmin)
+admin_site.register(Mission,MissionAdmin)
 admin_site.register(Request_type,Request_typeAdmin)
+admin_site.register(Mission_type,Mission_typeAdmin)
 admin_site.register(Approval)
 admin_site.register(Ordering)
 admin_site.register(Payment_type)

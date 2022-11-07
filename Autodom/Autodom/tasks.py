@@ -5,6 +5,7 @@ import requests as rq
 from celery import shared_task
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail, get_connection, EmailMultiAlternatives, mail_admins
 from django.template import Template, Context
 from django.shortcuts import get_object_or_404
@@ -12,7 +13,7 @@ from django.db.models import Q, Sum, Value, DateField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.templatetags.static import static
 from channels.layers import get_channel_layer
-from ChainControl.models import Approval, Email_templates, Request, Role, Request_type, RequestExecutor, Currency
+from ChainControl.models import Approval, Email_templates, Request, Role, Request_type, RequestExecutor, Currency, Mission
 from . import integ_1C
 from Autodom import settings
 from pwa_webpush import send_user_notification
@@ -22,10 +23,11 @@ from pwa_webpush import send_user_notification
 channel_layer = get_channel_layer()
 
 @shared_task
-def send_request_creator_notification(request_id,email_type):
+def send_request_creator_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
-    el = get_object_or_404(Request,id=request_id)
-    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+    model = ContentType.objects.get(id=model_id).model_class()
+    el = get_object_or_404(model,id=request_id)
+    email_template = Email_templates.objects.get(email_type=email_type, content_type=model_id) #TODO: exception
     if el.user.email == "":
         msg = f'{el.user} не указана почта'
         mail_admins("send_request_creator_notification",msg)
@@ -96,13 +98,13 @@ def send_request_creator_notification(request_id,email_type):
     return 'done'
 
 @shared_task
-def send_next_approval_notification(request_id,email_type):
+def send_next_approval_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
-    el = Approval.objects.filter(request__id=request_id,new_status = 'OA')
+    el = Approval.objects.filter(content_type = model_id,object_id = request_id,new_status = 'OA')
     el = el.order_by('order')[:1]
     el = el.get()
 
-    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+    email_template = Email_templates.objects.get(email_type=email_type,content_type=model_id) #TODO: exception
 
     no_emails = []
     mail_list = []
@@ -193,17 +195,18 @@ def send_next_approval_notification(request_id,email_type):
     return 'done'
 
 @shared_task
-def send_executor_notification(request_id,email_type):
+def send_executor_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
-    request = get_object_or_404(Request,id=request_id)
+    model = ContentType.objects.get(id=model_id).model_class()
+    request = get_object_or_404(model,id=request_id)
     #role = request.type.executor
     no_emails = []
     mail_list = []
     user_list = []
     #usrs = User.objects.filter(userprofile__role = role)
-    usrs = User.objects.filter(userprofile__role__requestexecutor__request_type= request.type)
+    usrs = User.objects.filter(userprofile__role__requestexecutor__object_id= request.type.id,userprofile__role__requestexecutor__content_type= ContentType.objects.get_for_model(request.type).id)
 
-    email_template = Email_templates.objects.get(email_type=email_type) #TODO: exception
+    email_template = Email_templates.objects.get(email_type=email_type, content_type=model_id) #TODO: exception
 
     for usr in usrs:
         if usr.email == "":
@@ -287,9 +290,25 @@ def send_daily_approval_notification():
     email_text = email_template.text
     email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
+    roles_list = []
+    user_list = []
+    for r in Request.objects.filter(status='OA', approval__new_status='OA'):
+        q = r.approval.order_by('order')[0]
+        if q.user == None:
+            roles_list.append(q.role)
+        else:
+            user_list.append(q.user.id)
 
-    approval_roles = Role.objects.filter(approval__new_status='OA', approval__request__status='OA')
-    approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA') | Q(userprofile__role__in = approval_roles )).distinct()
+    for r in Mission.objects.filter(status='OA', approval__new_status='OA'):
+        q = r.approval.order_by('order')[0]
+        if q.user == None:
+            roles_list.append(q.role)
+        else:
+            user_list.append(q.user.id)
+
+    #approval_roles = Role.objects.filter(approval__new_status='OA', approval__request__status='OA')
+    #approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA') | Q(userprofile__role__in = approval_roles )).distinct()
+    approval_users = User.objects.filter(Q(id__in = user_list) | Q(userprofile__role__in = roles_list)).distinct()
     email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []
     
@@ -357,8 +376,26 @@ def send_deadline_passed_notificaton():
     email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
-    approval_roles = Role.objects.filter(approval__new_status='OA',approval__request__status='OA', approval__request__complete_before__lte = datetime.now() )
-    approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA', approval__request__complete_before__lte = datetime.now() ) | Q(userprofile__role__in = approval_roles )).distinct()
+    roles_list = []
+    user_list = []
+    for r in Request.objects.filter(status='OA',complete_before__lte = datetime.now(), approval__new_status='OA'):
+        q = r.approval.order_by('order')[0]
+        if q.user == None:
+            roles_list.append(q.role)
+        else:
+            user_list.append(q.user.id)
+
+    for r in Mission.objects.filter(status='OA',complete_before__lte = datetime.now(), approval__new_status='OA'):
+        q = r.approval.order_by('order')[0]
+        if q.user == None:
+            roles_list.append(q.role)
+        else:
+            user_list.append(q.user.id)
+
+
+    #approval_roles = Role.objects.filter(approval__new_status='OA',approval__request__status='OA', approval__request__complete_before__lte = datetime.now() )
+    #approval_users = User.objects.filter(Q(approval__new_status='OA', approval__request__status='OA', approval__request__complete_before__lte = datetime.now() ) | Q(userprofile__role__in = approval_roles )).distinct()
+    approval_users = User.objects.filter(Q(id__in=user_list) | Q(userprofile__role__in = roles_list )).distinct()
     email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []
     for i in email_list:
@@ -424,8 +461,9 @@ def send_daily_executor_notification():
     email_html = Template(email_template.text).render(Context({"url1":settings.BASE_URL+reverse('index')}))
     email_subject = email_template.subject
 
-    #approval_roles = Request_type.objects.filter(request__status='AP').values('executor')
-    approval_roles = RequestExecutor.objects.filter(request_type__request__status='AP').values('role')
+    approval_roles = Request_type.objects.filter(request__status='AP').values('requestexecutor__role')
+    #approval_roles = RequestExecutor.objects.filter(request_type__request__status='AP').values('role')
+    #approval_roles = Request.objects.filter(status='AP').requestexecutor.values('role')
     approval_users = User.objects.filter(Q(userprofile__role__in = approval_roles )).distinct()
     email_list = list(approval_users.exclude(email="").values_list('email'))
     mail_list = []

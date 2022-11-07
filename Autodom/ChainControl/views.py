@@ -16,13 +16,14 @@ from django import forms
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F, Value, CharField,Count
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 import qrcode
 from Autodom import settings
-from .forms import RequestForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm
-from .models import Request, Approval, Contract, Bank_account, Ordering, Additional_file, Client, Individual, Individual_bank_account
+from .forms import RequestForm, MissionForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm, MissionSearchForm
+from .models import Request, Request_type, Approval, Contract, Bank_account, Ordering, Additional_file, Client, Individual, Individual_bank_account, Mission, Mission_type
 from . import utils
 from . import periodic_tasks
 from . import russian_strings
@@ -115,7 +116,11 @@ def app_description(request):
 def request_life_cycle(request):
     return render(request,'ChainControl/docs/request_life_cycle.html')
 
-
+@login_required
+def missions(request):
+    cur_user = request.user
+    webpush = {"user": cur_user }
+    return render(request,'ChainControl/missions.html',{'webpush':webpush})
 
 
 @login_required
@@ -193,9 +198,10 @@ def get_bank_accounts(request):
 def get_ordering_for_new_request(request):
     if request.method == 'GET':
         id = request.GET.get('id','')
+        model_id = request.GET.get('model_id','')
         ordering = []
-        if id != '':
-            els = Ordering.objects.filter(request_type__id = id).order_by('order')
+        if id != '' and model_id != '':
+            els = Ordering.objects.filter(content_type=model_id,object_id=id).order_by('order')
             for el in els:
                 if el.user != None:
                     ordering.append(f'{el.user.last_name} {el.user.first_name[0]}.')
@@ -211,7 +217,8 @@ def get_ordering_for_new_request(request):
 def get_approval_status(request):
     if request.method == 'GET':
         id = request.GET['id']
-        els = Approval.objects.filter(request__id = id).order_by('order').annotate(color=Value('xxx', output_field=CharField()))
+        model_id = request.GET['model_id']
+        els = Approval.objects.filter(content_type=model_id,object_id = id).order_by('order').annotate(color=Value('xxx', output_field=CharField()))
         utils.set_approval_color(els)
         return render(request,'ChainControl/approval_status.html',{"els":els})
 
@@ -227,7 +234,11 @@ def get_approval_form(request,id):
             messages.success(request,'Статус заявки изменен')
         else:
             messages.warning(request,'Не удалось изменить статус')
-        return redirect('index')
+
+        if obj.content_type == ContentType.objects.get_for_model(Request).id:
+            return redirect('requests')
+        else:
+            return redirect('missions')
     else:
         
         form = ApprovalForm(instance=el)
@@ -243,6 +254,13 @@ def get_approval_form(request,id):
     return render(request,'ChainControl/approval_form.html',context)
 
 @login_required
+def get_mission_search_form(request):
+    form = MissionSearchForm()
+    return render(request,'ChainControl/mission_search_form.html', {
+        'form' : form 
+        })
+
+@login_required
 def get_search_form(request):
     form = RequestSearchForm()
     return render(request,'ChainControl/request_search_form.html', {
@@ -250,21 +268,23 @@ def get_search_form(request):
         })
 
 @login_required
-def set_request_done(request, id):
+def set_request_done(request, model_id,id):
     if request.method == 'POST' and 'done' in request.POST:
-        el = get_object_or_404(Request,id=id)
-        if el.status == Request.StatusTypes.APPROVED and el.type.requestexecutor_set.filter(role = request.user.userprofile.role).exists() :
+        model = ContentType.objects.get(id=model_id)
+        el = get_object_or_404(model.model_class(),id=id)
+        if el.status == Request.StatusTypes.APPROVED and el.type.requestexecutor.filter(role = request.user.userprofile.role).exists() :
             el.status = Request.StatusTypes.DONE
             el.save()
             utils.write_history(el,request.user,el.status, russian_strings.comment_request_done)
             periodic_tasks.send_request_done_notification(el)
-        return redirect(reverse('request_item', args=[str(el.id)]))
+        return redirect(reverse(f'{model.model.lower()}_item', args=[str(el.id)]))
     raise PermissionDenied
 
 @login_required
-def set_request_canceled(request, id):
+def set_request_canceled(request, model_id, id):
     if request.method == 'POST' and 'cancel' in request.POST:
-        el = get_object_or_404(Request,id=id)
+        model = ContentType.objects.get(id=model_id)
+        el = get_object_or_404(model.model_class(),id=id)
         NOT_ALLOWED = {Request.StatusTypes.DONE}
         if  not el.status in NOT_ALLOWED and el.user == request.user:
             el.status = Request.StatusTypes.CANCELED
@@ -273,19 +293,20 @@ def set_request_canceled(request, id):
             messages.success(request,'Заявка отменена')
             utils.write_history(el,request.user,el.status, russian_strings.comment_request_canceled)
             periodic_tasks.send_request_canceled_notification(el)
-        return redirect(reverse('request_item', kwargs={"pk":str(el.id)}))
+        return redirect(reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.id)}))
     raise PermissionDenied
 
 @login_required
-def request_print(request,pk):
-    obj = get_object_or_404(Request,pk=pk)
-    els = Approval.objects.filter(request__pk = pk).order_by('order')
+def request_print(request,model_id,pk):
+    model = ContentType.objects.get(id=model_id)
+    obj = get_object_or_404(model.model_class(),pk=pk)
+    els = obj.approval.order_by('order')
     context = {
         "object":obj,
         "els":els,
         "company_name": settings.COMPANY_NAME,
         }
-    return render(request,'ChainControl/request_print.html',context)
+    return render(request,f'ChainControl/{model.model.lower()}_print.html',context)
 
 
 @method_decorator(login_required,name='dispatch')
@@ -296,16 +317,22 @@ class RequestDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        context['user_is_executor'] = self.object.type.requestexecutor_set.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
+        context['user_is_executor'] = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
+        #context['user_is_executor'] = self.object.type.requestexecutor_set.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
 
         DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
         context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
 
-        history = self.object.history_set.order_by('-date')
+        history = self.object.history.order_by('-date')
+        #history = self.object.history_set.order_by('-date')
         utils.set_approval_color(history)
         context['history'] = history
-
-        approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
+        context['model_id'] = ContentType.objects.get_for_model(self.object).id
+        if self.object.status == 'OA':
+            approving_user = self.object.approval.filter(new_status='OA').order_by('order')[:1]
+        else:
+            approving_user = Approval.objects.none()
+        #approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
         if self.object.status != Request.StatusTypes.ON_REWORK and approving_user.count() > 0 :
             approving_user = approving_user.get()
             if (approving_user.user != None and approving_user.user == self.request.user) or (approving_user.role != None and approving_user.role == self.request.user.userprofile.role) :
@@ -315,6 +342,7 @@ class RequestDetailView(DetailView):
         else:
            approving_user = False
         context['approving_user'] = approving_user
+
 
         return context
 
@@ -336,15 +364,18 @@ class RequestUpdateView(UpdateView):
         DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
         context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
 
-        history = self.object.history_set.order_by('-date')
+        history = self.object.history.order_by('-date')
+        #history = self.object.history_set.order_by('-date')
         utils.set_approval_color(history)
         context['history'] = history
 
         modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
-        addfiles = modelformset(queryset=Additional_file.objects.filter(request_1=self.object.id),initial=[{
-                'request_1':self.object,},])
+        ticket_type = ContentType.objects.get_for_model(self.object).id
+        addfiles = modelformset(queryset=Additional_file.objects.filter(content_type=ticket_type,object_id=self.object.id),initial=[{
+                'content_type':ticket_type,
+                'object_id':self.object.id},])
         context['addfiles'] = addfiles
-
+        context['model_id'] = ticket_type
         return context
 
     def post(self, request, **kwargs):
@@ -411,7 +442,7 @@ class RequestListView(ListView):
         elif mode == 'all_requests' and cur_user.is_staff:
             pass
         else:
-            qs = qs.filter(Q(approval__new_status='OA', approval__request__status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
+            qs = qs.filter(Q(approval__new_status='OA', status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
 
         ALLOWED = ('id', 'client', 'sum','date','user','status')
         request_filter = RequestSearchForm(self.request.GET)
@@ -451,6 +482,7 @@ class RequestCreateView(CreateView):
     def get_context_data(self, **kwargs ):
         context = super().get_context_data(**kwargs)
         context['addfiles'] = AdditionalFileInlineFormset()
+        context['model_id'] = ContentType.objects.get_for_model(Request_type).id
         return context
 
     def post(self, request, *args, **kwargs):
@@ -490,3 +522,267 @@ class RequestCreateView(CreateView):
         messages.warning(request,'Заявка не создана')
 
         return self.form_invalid(form)
+
+
+@method_decorator(login_required,name='dispatch')
+class MissionListView(ListView):
+    model= Mission
+    paginate_by = 20
+
+    def get_queryset(self):
+        cur_user = self.request.user
+        approval_count = Count('approval')
+        approved_count = Count('approval', filter = Q(approval__new_status = Mission.StatusTypes.APPROVED))
+        qs = super(MissionListView, self).get_queryset().annotate(approval_count = approval_count).annotate(approved_count = approved_count)
+
+        mode = self.request.GET.get('mode','requests_for_approval')
+        
+        if mode == 'my_requests':
+            qs = qs.filter(user=cur_user)
+        elif mode == 'requests_to_be_done':
+            qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
+        elif mode == 'all_requests' and cur_user.is_staff:
+            pass
+        else:
+            qs = qs.filter(Q(approval__new_status='OA', status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
+
+        ALLOWED = ('id', 'client', 'individual','date','user','status')
+        request_filter = MissionSearchForm(self.request.GET)
+        if request_filter.is_valid():
+            kwargs = dict(
+                (key, value)
+                for key, value in request_filter.cleaned_data.items()
+                if key in ALLOWED and (value != None and value != "")
+            )
+            if request_filter.cleaned_data['expired']:
+                kwargs['status__in'] = ['OA','AP']
+                kwargs['complete_before__lte'] = datetime.now()
+            qs = qs.filter(**kwargs)
+
+
+        qs = qs.order_by('-id')
+        utils.set_approval_color(qs)
+        return qs
+
+@method_decorator(login_required,name='dispatch')
+class MissionCreateView(CreateView):
+    model = Mission
+    form_class = MissionForm
+    template_name_suffix = '_create_form'
+    
+
+
+    def get_initial(self):
+        now = datetime.now()
+        return {'user':self.request.user,
+                'date':now.date,
+                'complete_before': utils.next_weekday(now),
+                'date_from':now,
+                'date_to':now,
+                'status':Request.StatusTypes.ON_APPROVAL.value,
+                }
+
+    def get_context_data(self, **kwargs ):
+        context = super().get_context_data(**kwargs)
+        context['addfiles'] = AdditionalFileInlineFormset()
+        context['model_id'] = ContentType.objects.get_for_model(Mission_type).id
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = MissionForm(request.POST)        
+        addfiles = AdditionalFileInlineFormset(request.POST,request.FILES, instance=form.instance)
+        # check whether it's valid:
+        if form.is_valid() :
+            self.object = form.save(commit = False)
+            self.object.user = request.user
+            #if self.object.is_accountable_person:
+            #    if self.object.individual == None or (self.object.payment_type.cashless and self.object.individual_bank_account == None):
+            #        messages.warning(request,'Не заполнена информация о подотчетном лице.')
+            #        return self.form_invalid(self.get_form())
+            #else:
+            #    if self.object.contract == None or (self.object.payment_type.cashless and self.object.bank_account == None):
+            #        messages.warning(request,'Не заполнена информация о контрагенте.')
+            #        return self.form_invalid(form)
+
+            #if self.object.currency == None:
+            #    if self.object.contract != None and self.object.contract.currency != None:
+            #        self.object.currency = self.object.contract.currency
+            #    else:
+            #        messages.warning(request,'В договоре не указана валюта. Необходимо указать валюту в заявке.')
+            #        return self.form_invalid(form)
+
+            
+            
+            self.object.save()
+            if addfiles.is_valid():
+                files = addfiles.save(commit = False)
+                for file in files:
+                    file.request_1 = self.object
+                    file.save()
+                messages.success(request,'Заявка создана')
+                return self.form_valid(form)
+            
+        messages.warning(request,'Заявка не создана')
+
+        return self.form_invalid(form)
+
+
+@method_decorator(login_required,name='dispatch')
+class MissionDetailView(DetailView):
+    model = Mission
+    form_class = MissionForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['user_is_executor'] = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
+        context['executor_can_edit'] = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role, can_edit=True).exists() and self.object.status == Request.StatusTypes.APPROVED
+        #context['user_is_executor'] = self.object.type.requestexecutor_set.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
+
+        DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
+        context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
+
+        history = self.object.history.order_by('-date')
+        #history = self.object.history_set.order_by('-date')
+        utils.set_approval_color(history)
+        context['history'] = history
+        context['model_id'] = ContentType.objects.get_for_model(self.object).id
+        if self.object.status == 'OA':
+            approving_user = self.object.approval.filter(new_status='OA').order_by('order')[:1]
+        else:
+            approving_user = Approval.objects.none()
+        #approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
+        if self.object.status != Request.StatusTypes.ON_REWORK and approving_user.count() > 0 :
+            approving_user = approving_user.get()
+            if (approving_user.user != None and approving_user.user == self.request.user) or (approving_user.role != None and approving_user.role == self.request.user.userprofile.role) :
+                context['approving_user_can_edit'] = approving_user.can_edit
+                approving_user = approving_user.id
+            else:
+                context['approving_user_can_edit'] = False
+                approving_user = False
+        else:
+            context['approving_user_can_edit'] = False
+            approving_user = False
+        context['approving_user'] = approving_user
+
+
+        return context
+
+    def render_to_response(self, context):
+        ALOWED_STATUS = [Request.StatusTypes.APPROVED, Request.StatusTypes.DONE]
+        if ( (self.object.user == self.request.user or context['approving_user_can_edit'] ) and not self.object.status in ALOWED_STATUS) or context['executor_can_edit']  :
+            return redirect('mission_update',pk=self.object.pk)
+        return super(MissionDetailView,self).render_to_response(context)
+
+
+@method_decorator(login_required,name='dispatch')
+class MissionUpdateView(UpdateView):
+    model = Mission
+    form_class = MissionForm
+
+    def get_context_data(self, **kwargs ):
+        context = super().get_context_data(**kwargs)
+
+        context['user_is_executor'] = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role).exists() and self.object.status == Request.StatusTypes.APPROVED
+        context['executor_can_edit'] = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role, can_edit=True).exists() and self.object.status == Request.StatusTypes.APPROVED
+
+        DISALOWED_STATUS = [ Request.StatusTypes.DONE, Request.StatusTypes.CANCELED ]
+        context['user_can_cancel'] = self.request.user == self.object.user and not self.object.status in DISALOWED_STATUS
+
+        if self.object.status == 'OA':
+            approving_user = self.object.approval.filter(new_status='OA').order_by('order')[:1]
+        else:
+            approving_user = Approval.objects.none()
+        #approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
+        if self.object.status != Request.StatusTypes.ON_REWORK and approving_user.count() > 0 :
+            approving_user = approving_user.get()
+            if (approving_user.user != None and approving_user.user == self.request.user) or (approving_user.role != None and approving_user.role == self.request.user.userprofile.role) :
+                context['approving_user_can_edit'] = approving_user.can_edit
+                approving_user = approving_user.id
+            else:
+                context['approving_user_can_edit'] = False
+                approving_user = False
+        else:
+            context['approving_user_can_edit'] = False
+            approving_user = False
+        context['approving_user'] = approving_user
+
+
+        history = self.object.history.order_by('-date')
+        #history = self.object.history_set.order_by('-date')
+        utils.set_approval_color(history)
+        context['history'] = history
+
+        modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
+        ticket_type = ContentType.objects.get_for_model(self.object).id
+        addfiles = modelformset(queryset=Additional_file.objects.filter(content_type=ticket_type,object_id=self.object.id),initial=[{
+                'content_type':ticket_type,
+                'object_id':self.object.id},])
+        context['addfiles'] = addfiles
+        context['model_id'] = ticket_type
+        return context
+
+    def post(self, request, **kwargs):
+        self.object = self.get_object()
+
+        executor_can_edit = self.object.type.requestexecutor.filter(role=self.request.user.userprofile.role, can_edit=True).exists() and self.object.status == Request.StatusTypes.APPROVED
+
+        if self.object.status == 'OA':
+            approving_user = self.object.approval.filter(new_status='OA').order_by('order')[:1]
+        else:
+            approving_user = Approval.objects.none()
+        #approving_user = self.object.approval_set.filter(new_status='OA',request__status = 'OA').order_by('order')[:1]
+        if self.object.status != Request.StatusTypes.ON_REWORK and approving_user.count() > 0 :
+            approving_user = approving_user.get()
+            if (approving_user.user != None and approving_user.user == self.request.user) or (approving_user.role != None and approving_user.role == self.request.user.userprofile.role) :
+                user_can_edit = approving_user.can_edit
+                
+            else:
+                user_can_edit = False
+        else:
+           user_can_edit  = False
+
+        if request.user != self.object.user and user_can_edit == False and executor_can_edit== False:
+            messages.warning(request,'Заявка редактируется только заявителем')
+            return HttpResponseForbidden("Доступ к редактированию запрещен.")
+
+        form = self.get_form()
+        modelformset = modelformset_factory(Additional_file,fields='__all__',extra=3,can_delete=True,max_num=3)
+        addfiles = modelformset(request.POST,request.FILES,initial=[{
+            'request_1':self.object,},])
+        if addfiles.is_valid():
+            files = addfiles.save(commit = False)
+            for file in addfiles.deleted_objects:
+                file.delete()
+            for file in files:
+                file.request_1 = self.object
+                file.save()
+        
+        
+        if form.data['status'] == Request.StatusTypes.ON_REWORK or form.data['status']== Request.StatusTypes.CANCELED:
+            form.data._mutable = True
+            form.data['status'] = Request.StatusTypes.ON_APPROVAL
+            form.data._mutable = False
+            comment = russian_strings.comment_request_reworked    
+        else :
+            comment = russian_strings.comment_request_changed
+            
+        if form.is_valid():
+            if len(form.changed_data) > 0:
+                
+                if request.user == self.object.user:
+                    utils.reset_request_approvals(self.object)
+                    periodic_tasks.send_approval_status_approved_notification(self.object)
+                utils.write_history(self.object,request.user,self.object.status, comment)
+                messages.success(request,'Заявка обновлена')
+            
+            return self.form_valid(form)
+        else:
+            messages.warning(request,'Не удалось обновить заявку')
+            return self.form_invalid(form)
+
+    def render_to_response(self, context):
+        DISALOWED_STATUS = [Request.StatusTypes.APPROVED, Request.StatusTypes.DONE]
+        if ((self.object.user != self.request.user and context['approving_user_can_edit'] == False) or self.object.status in DISALOWED_STATUS) and context['executor_can_edit'] == False:
+            return redirect('mission_item',pk=self.object.pk)
+        return super(MissionUpdateView,self).render_to_response(context)

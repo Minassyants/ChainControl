@@ -30,34 +30,7 @@
 
         });
 
-        if ($("#id_is_accountable_person").is(":checked")) {
-            $("#id_contract").removeAttr('required');
-            $("#id_bank_account").removeAttr('required');
-
-            $("#id_contract").selectize()[0].selectize.clear();
-            $("#id_bank_account").selectize()[0].selectize.clear();
-
-            $("#id_individual").attr('required', '');
-            $("#id_individual_bank_account").attr('required', '');
-
-            $("#contract_div").toggle();
-            $("#bank_account_div").toggle();
-            
-
-        }
-        else {
-            $("#id_contract").attr('required', '');
-            $("#id_bank_account").attr('required', '');
-
-            $("#id_individual").removeAttr('required');
-            $("#id_individual_bank_account").removeAttr('required');
-
-            $("#id_individual").selectize()[0].selectize.clear();
-            $("#id_individual_bank_account").selectize()[0].selectize.clear();
-
-            $("#individual_div").toggle();
-            $("#individual_bank_account_div").toggle();
-        };
+        
 
         
 
@@ -68,7 +41,7 @@
 
 {% block descr %}
 <p class="h1 text-center">
-    Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
+    Заявка на командирование #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 </p>
 <p class="h4 text-center">
     {{form.instance.get_status_display }}
@@ -127,8 +100,8 @@
                                         {{form.complete_before}}
                                     </div>
                                     <div class="col-12">
-                                        <label for="inputpayment_type" class="form-label">Тип оплаты</label>
-                                        {{form.payment_type}}
+                                        <label for="inputindividual" class="form-label">Ф.И.О. командируемого</label>
+                                        {{form.individual}}
                                     </div>
                                 </fieldset>
                             </div>
@@ -136,54 +109,46 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <fieldset>
-                                    <legend> Данные о контрагенте</legend>
+                                    <!--<legend> Данные о контрагенте</legend>-->
                                     <div class="row g-3">
-                                        <div class="col-8">
+                                        <div class="col-12">
+                                            <label for="inputdestination" class="form-label">Направление</label>
+                                            {{form.destination}}
+                                        </div>
+                                        <div class="col-12">
                                             <label for="inputclient" class="form-label">Контрагент</label>
                                             {{form.client}}
                                         </div>
-                                        <div class="col-4">
-                                            <label for="is_accountable_person" class="form-label">Подотчет</label><br />
-                                            {{form.is_accountable_person}}
-                                        </div>
-                                        <div class="col-12" id="contract_div">
-                                            <label for="inputcontract" class="form-label">Договор</label>
-                                            {{form.contract}}
-                                        </div>
-                                        <div class="col-12" id="bank_account_div">
-                                            <label for="inputbank_account" class="form-label">Номер счета</label>
-                                            {{form.bank_account}}
-                                        </div>
-                                        <div class="col-12" id="individual_div">
-                                            <label for="inputindividual" class="form-label"><strong>Подотчетное лицо</strong></label>
-                                            {{form.individual}}
-                                        </div>
-                                        <div class="col-12" id="individual_bank_account_div">
-                                            <label for="inputindividual_bank_account" class="form-label"><strong>Карт-счет</strong></label>
-                                            {{form.individual_bank_account}}
+                                        <div class="col-12">
+                                            <label for="inputpurpose" class="form-label">Цель командировки</label>
+                                            {{form.purpose}}
                                         </div>
                                     </div>
                                 </fieldset>
                             </div>
                             <div class="col-md-6">
                                 <fieldset>
-                                    <legend> Данные счета на оплату</legend>
+                                    <!--<legend> Данные счета на оплату</legend>-->
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label for="inputinvoice_number" class="form-label">Номер счета</label>
-                                            {{form.invoice_number}}
+                                        <div class="col-md-6">
+                                            <label for="inputdate_from" class="form-label">Дата начала</label>
+                                            {{form.date_from}}
                                         </div>
-                                        <div class="col-md-4">
-                                            <label for="inputinvoice_date" class="form-label">Дата счета</label>
-                                            {{form.invoice_date}}
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="inputAVR_date" class="form-label">Дата оказания услуг</label>
-                                            {{form.AVR_date}}
+                                        <div class="col-md-6">
+                                            <label for="inputdate_to" class="form-label">Дата окончания</label>
+                                            {{form.date_to}}
                                         </div>
                                         <div class="col-12">
-                                            <label for="inputinvoice_details" class="form-label">Содержание</label>
-                                            {{form.invoice_details}}
+                                            <label for="inputticket_price" class="form-label">Стоимость билетов</label>
+                                            {{form.ticket_price}}
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="inputcost_of_living" class="form-label">Стоимость проживания</label>
+                                            {{form.cost_of_living}}
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="inputdaily_allowance" class="form-label">Суточные</label>
+                                            {{form.daily_allowance}}
                                         </div>
                                     </div>
                                 </fieldset>
@@ -191,16 +156,6 @@
                         </div>
                         <div class="col-12">
                             <fieldset>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <label for="inputsum" class="form-label">Сумма</label>
-                                        {{form.sum}}
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="inputsum" class="form-label">Валюта</label>
-                                        {{form.currency}}
-                                    </div>
-                                </div>
                                 <div class="col-md-12">
                                     <label for="inputcomment" class="form-label">Комментарий</label>
                                     {{form.comment}}
@@ -274,10 +229,11 @@
                             {% endwith %}
 
                         </div>
+                    </div>
                 </div>
             </div>
-                </div>
         </form>
+
         {% if user_can_cancel %}
         <div class="row g-3 p-3">
             <form action="{% url 'set_request_canceled' id=form.instance.id %}" method="post">
@@ -286,6 +242,25 @@
                 <div class="row pt-2">
                     <div class="col-12 ps-2">
                         <button type="submit" class="btn btn-danger">Отменить</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if approving_user %}
+        <div class="row g-3 p-3">
+            <div id="approval_form"></div>
+        </div>
+        {% endif %}
+        {% if user_is_executor %}
+        <div class="row g-3 p-3">
+            <form action="{% url 'set_request_done' model_id=model_id id=object.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="done" value="1" id="id_done">
+                <div class="row pt-2">
+                    <div class="col-12 ps-2">
+                        <button type="submit" class="btn btn-success">Выполнено</button>
                     </div>
                 </div>
             </form>
@@ -312,35 +287,6 @@
 <script type="text/javascript">
     $("#id_type").oldValue = $("#id_type").val();
     
-    $("#id_contract").selectize()[0].selectize.clearOptions();
-    $("#id_bank_account").selectize()[0].selectize.clearOptions();
-    $("#id_individual_bank_account").selectize()[0].selectize.clearOptions();
-    $("#id_client").on("change", function () {
-        $.getJSON("{% url 'get_contracts' %}?id=" + $(this).val(), function (Contracts) {
-            $("#id_contract").selectize()[0].selectize.clear();
-            $("#id_contract").selectize()[0].selectize.clearOptions();
-            $("#id_contract").selectize()[0].selectize.load(function (callback) {
-                callback(Contracts);
-            });
-        });
-        $.getJSON("{% url 'get_bank_accounts' %}?id=" + $(this).val(), function (Bank_accounts) {
-            $("#id_bank_account").selectize()[0].selectize.clear();
-            $("#id_bank_account").selectize()[0].selectize.clearOptions();
-            $("#id_bank_account").selectize()[0].selectize.load(function (callback) {
-                callback(Bank_accounts);
-            });
-        });
-    });
-
-    $("#id_individual").on("change", function () {
-        $.getJSON("{% url 'get_individual_bank_accounts' %}?id=" + $(this).val(), function (Contracts) {
-            $("#id_individual_bank_account").selectize()[0].selectize.clear();
-            $("#id_individual_bank_account").selectize()[0].selectize.clearOptions();
-            $("#id_individual_bank_account").selectize()[0].selectize.load(function (callback) {
-                callback(Contracts);
-            });
-        });
-    });
 
     $("#id_type").on("change", function () {
 
@@ -353,38 +299,24 @@
 
     });
 
-    $("#id_is_accountable_person").on("change", function () {
-        if ($(this).is(":checked")) {
-            $("#id_contract").removeAttr('required');
-            $("#id_bank_account").removeAttr('required');
-
-            $("#id_contract").selectize()[0].selectize.clear();
-            $("#id_bank_account").selectize()[0].selectize.clear();
-
-            $("#id_individual").attr('required', '');
-            $("#id_individual_bank_account").attr('required', '');
-
-
-        }
-        else {
-            $("#id_contract").attr('required', '');
-            $("#id_bank_account").attr('required', '');
-
-            $("#id_individual").removeAttr('required');
-            $("#id_individual_bank_account").removeAttr('required');
-
-            $("#id_individual").selectize()[0].selectize.clear();
-            $("#id_individual_bank_account").selectize()[0].selectize.clear();
-        };
-
-        $("#contract_div").toggle();
-        $("#bank_account_div").toggle();
-        $("#individual_div").toggle();
-        $("#individual_bank_account_div").toggle();
-    });
 
     $(".approval-status").load("{% url 'get_approval_status' %}?model_id={{ model_id }}&id={{ form.instance.id }}");
 
+    {% if approving_user %}
+    $('#approval_form').load("{% url 'get_approval_form' id=approving_user|default:'-1' %}", function () {
+        $('select').selectize({
+            sortField: 'text'
+        });
+        $("#id_new_status").on("change", function () {
+            if ($(this).val() == 'OR' || $(this).val() == 'CA') {
+                $("#id_approval_comment").attr('required', '');
+            }
+            else {
+                $("#id_approval_comment").removeAttr('required');
+            };
+        });
+    });
+    {% endif %}
     
 </script>
         {% endblock %}

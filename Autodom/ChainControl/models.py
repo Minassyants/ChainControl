@@ -1,6 +1,8 @@
 
 from datetime import datetime
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
@@ -132,9 +134,162 @@ class Individual_bank_account(models.Model):
         verbose_name = 'Карт-счет'
         verbose_name_plural = 'Карт-счета'
 
+class Additional_file(models.Model):
+    #request_1= models.ForeignKey(Request,on_delete = models.CASCADE, verbose_name='Заявка')
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request') | models.Q(model='mission')  , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request_1 = GenericForeignKey('content_type', 'object_id')
+    file = models.FileField(verbose_name='Приложение')
+
+    class Meta:
+        verbose_name = 'Вложение'
+        verbose_name_plural = 'Вложения'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+class Ordering(models.Model):
+    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
+    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
+    #request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request_type') | models.Q(model='mission_type') , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request_type = GenericForeignKey('content_type', 'object_id')
+    order = models.IntegerField(verbose_name='Порядок согласования')
+    can_edit  = models.BooleanField(verbose_name='Может доработать заявку', default=False)
+
+    class Meta:
+        verbose_name = 'Порядок согласования'
+        verbose_name_plural = 'Порядки согласования'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+
+class Approval(models.Model):
+    class StatusTypes(models.TextChoices):
+        OPEN = 'OP', _('Открыта')
+        ON_APPROVAL = 'OA', _('На согласовании')
+        APPROVED = 'AP', _('Согласована')
+        ON_REWORK = 'OR', _('На доработке')
+        CANCELED = 'CA', _('Отменена')
+        DONE = 'DO', _('Выполнена')
+    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
+    role = models.ForeignKey(Role,models.SET_NULL,blank=True,null=True, verbose_name='Роль')
+    new_status = models.CharField(verbose_name='Установленный статус', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.ON_APPROVAL)
+    order = models.IntegerField(verbose_name = 'Порядок согласования')
+    can_edit  = models.BooleanField(verbose_name='Может доработать заявку', default=False)
+    #request = models.ForeignKey(Request,on_delete = models.CASCADE, verbose_name='Заявка')
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request') | models.Q(model='mission'), on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return str(self.request)+", "+str(self.role)+", "+str(self.new_status)
+
+    class Meta:
+        verbose_name = 'Согласование'
+        verbose_name_plural = 'Согласования'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+class RequestExecutor(models.Model):
+    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
+    #request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request_type') | models.Q(model='mission_type') , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    can_edit  = models.BooleanField(verbose_name='Может доработать заявку', default=False)
+    request_type = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = 'Исполнитель'
+        verbose_name_plural = 'Исполнители'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+class History(models.Model):
+    class StatusTypes(models.TextChoices):
+        OPEN = 'OP', _('Открыта')
+        ON_APPROVAL = 'OA', _('На согласовании')
+        APPROVED = 'AP', _('Согласована')
+        ON_REWORK = 'OR', _('На доработке')
+        CANCELED = 'CA', _('Отменена')
+        DONE = 'DO', _('Выполнена')
+    #request = models.ForeignKey(Request, on_delete= models.CASCADE, verbose_name='Заявка')
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request') | models.Q(model='mission') , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request = GenericForeignKey('content_type', 'object_id')
+    date = models.DateTimeField(verbose_name='Дата события',default=datetime.now,blank=True)
+    user = models.ForeignKey(User,models.SET_NULL, null=True, verbose_name='Пользователь')
+    status = models.CharField(verbose_name='Статус', max_length = 2, choices=StatusTypes.choices, blank=True, null=True)
+    comment = models.TextField(verbose_name ='Комментарий',max_length = 200, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.request)+", "+str(self.user)+", "+str(self.status)+", "+self.comment
+
+    class Meta:
+        verbose_name = 'История изменения'
+        verbose_name_plural = 'История изменений'
+
+class Mission_type(models.Model):
+    name = models.CharField(verbose_name='Наименование',max_length= 100)
+    #roles = models.ManyToManyField(Role,through = 'Ordering', verbose_name='Порядок согласования')
+    roles = GenericRelation ( Ordering )
+    requestexecutor = GenericRelation ( RequestExecutor )
+    ordering = GenericRelation ( Ordering )
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Вид командировки'
+        verbose_name_plural = 'Виды командировок'
+
+class Mission(models.Model):
+    class StatusTypes(models.TextChoices):
+        OPEN = 'OP', _('Открыта')
+        ON_APPROVAL = 'OA', _('На согласовании')
+        APPROVED = 'AP', _('Согласована')
+        ON_REWORK = 'OR', _('На доработке')
+        CANCELED = 'CA', _('Отменена')
+        DONE = 'DO', _('Выполнена')
+    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
+    date = models.DateField(verbose_name='Дата создания',blank=True,default=datetime.now)
+    type = models.ForeignKey(Mission_type, on_delete = models.CASCADE, verbose_name='Вид командировки')
+    complete_before = models.DateField(verbose_name='Завершить до')
+    individual = models.ForeignKey(Individual, on_delete = models.CASCADE, verbose_name='Физ. лицо', blank= True, null= True)
+    destination = models.CharField(verbose_name='Направление', max_length=200,blank= True, null= True)
+    purpose = models.TextField(verbose_name='Цель командировки', max_length=300,blank= True, null= True)
+    date_from = models.DateField(verbose_name='Дата начала',blank=True, default=datetime.now)
+    date_to = models.DateField(verbose_name='Дата окончания',blank=True, default=datetime.now)
+    client = models.ForeignKey(Client, on_delete = models.CASCADE, verbose_name='Клиент/Компания',blank= True, null= True)
+    ticket_price = models.FloatField(verbose_name = 'Стоимость билетов',blank= True, null= True)
+    cost_of_living = models.FloatField(verbose_name = 'Стоимость проживания',blank= True, null= True)
+    daily_allowance = models.FloatField(verbose_name = 'Суточные',blank= True, null= True)
+    status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.OPEN)
+    comment = models.CharField(verbose_name ='Комментарий',max_length = 200,blank=True,null=True)
+    additional_file = GenericRelation( Additional_file )
+    approval = GenericRelation ( Approval )
+    history = GenericRelation ( History )
+
+    def __str__(self):
+        return self.individual.name + ", "+ str(self.destination)
+
+    def get_absolute_url(self):
+        return reverse('mission_item', args=[str(self.id)])
+
+    class Meta:
+        ordering = ["date_from"]
+        verbose_name = 'Заявка на командирование'
+        verbose_name_plural = "Заявки на командирование"
+
 class Request_type(models.Model):
     name = models.CharField(verbose_name='Наименование',max_length= 100)
-    roles = models.ManyToManyField(Role,through = 'Ordering', verbose_name='Порядок согласования')
+    #roles = models.ManyToManyField(Role,through = 'Ordering', through_fields=('request_type','role'), verbose_name='Порядок согласования')
+    roles = GenericRelation ( Ordering )
+    requestexecutor = GenericRelation( RequestExecutor )
+    ordering = GenericRelation ( Ordering )
 
     def __str__(self):
         return self.name
@@ -170,8 +325,9 @@ class Request(models.Model):
     is_accountable_person = models.BooleanField(verbose_name='Оплата подотчетному лицу', default= False)
     individual = models.ForeignKey(Individual, on_delete = models.CASCADE, verbose_name='Физ. лицо', blank= True, null= True)
     individual_bank_account = models.ForeignKey(Individual_bank_account, on_delete= models.CASCADE, verbose_name='Карт-счет', blank= True, null= True)
-
-    
+    additional_file = GenericRelation( Additional_file )
+    approval = GenericRelation ( Approval )
+    history = GenericRelation ( History )
 
     def __str__(self):
         return self.client.name + ", "+ str(self.complete_before)+", "+str(self.sum)
@@ -185,60 +341,32 @@ class Request(models.Model):
         verbose_name_plural = "Заявки"
 
 
-class Approval(models.Model):
-    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
-    role = models.ForeignKey(Role,models.SET_NULL,blank=True,null=True, verbose_name='Роль')
-    new_status = models.CharField(verbose_name='Установленный статус', max_length = 2, choices=Request.StatusTypes.choices, default=Request.StatusTypes.ON_APPROVAL)
-    order = models.IntegerField(verbose_name = 'Порядок согласования')
-    request = models.ForeignKey(Request,on_delete = models.CASCADE, verbose_name='Заявка')
-
-    def __str__(self):
-        return str(self.request)+", "+str(self.role)+", "+str(self.new_status)
-
-    class Meta:
-        verbose_name = 'Согласование'
-        verbose_name_plural = 'Согласования'
 
 
 
-class Ordering(models.Model):
-    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
-    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
-    request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
-    order = models.IntegerField(verbose_name='Порядок согласования')
 
-    class Meta:
-        verbose_name = 'Порядок согласования'
-        verbose_name_plural = 'Порядки согласования'
 
 class Initiator(models.Model):
     user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
     role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
-    request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
+    #request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
+    content_type = models.ForeignKey(ContentType,limit_choices_to=models.Q(model='request_type') | models.Q(model='mission_type') , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request_type = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         verbose_name = 'Иницатор'
         verbose_name_plural = 'Инициаторы'
-
-class RequestExecutor(models.Model):
-    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
-    request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
-
-    class Meta:
-        verbose_name = 'Исполнитель'
-        verbose_name_plural = 'Исполнители'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
 
 
 
 
 
-class Additional_file(models.Model):
-    request_1= models.ForeignKey(Request,on_delete = models.CASCADE, verbose_name='Заявка')
-    file = models.FileField(verbose_name='Приложение')
 
-    class Meta:
-        verbose_name = 'Вложение'
-        verbose_name_plural = 'Вложения'
+
 
 class Email_templates(models.Model):
     class Email_types(models.TextChoices):
@@ -252,7 +380,8 @@ class Email_templates(models.Model):
         DAILY_EXECUTOR_NOTIFICATION = '210', _('Ежедневное напоминание о необходимости исполнения')
         DEADLINE_PASSED_NOTIFICATION = '220', _('Напоминание о просроченных заявках')
 
-    email_type = models.CharField(verbose_name='Тип шаблона', max_length=3,choices= Email_types.choices,default=Email_types.INITIAL_NOTIFICATION,unique=True)
+    content_type = models.ForeignKey(ContentType, limit_choices_to=models.Q(model='request') | models.Q(model='mission') , on_delete=models.CASCADE)
+    email_type = models.CharField(verbose_name='Тип шаблона', max_length=3,choices= Email_types.choices,default=Email_types.INITIAL_NOTIFICATION,unique=False)
     subject = models.CharField(verbose_name='Тема письма', max_length=100,blank=False,null=False)
     text = models.TextField(verbose_name='Текст письма', max_length=500,blank=False,null=False)
     
@@ -269,16 +398,3 @@ class Email_templates(models.Model):
         verbose_name_plural = 'Шаблоны уведомлений'
     
     
-class History(models.Model):
-    request = models.ForeignKey(Request, on_delete= models.CASCADE, verbose_name='Заявка')
-    date = models.DateTimeField(verbose_name='Дата события',default=datetime.now,blank=True)
-    user = models.ForeignKey(User,models.SET_NULL, null=True, verbose_name='Пользователь')
-    status = models.CharField(verbose_name='Статус', max_length = 2, choices=Request.StatusTypes.choices, blank=True, null=True)
-    comment = models.TextField(verbose_name ='Комментарий',max_length = 200, blank=True, null=True)
-
-    def __str__(self):
-        return str(self.request)+", "+str(self.user)+", "+str(self.status)+", "+self.comment
-
-    class Meta:
-        verbose_name = 'История изменения'
-        verbose_name_plural = 'История изменений'

@@ -1,18 +1,18 @@
 import os
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-from .models import Request, Approval, Additional_file
+from .models import Request, Approval, Additional_file, Mission
 from . import periodic_tasks
 from . import utils
 from .russian_strings import comment_create_request
 
-@receiver(post_save, sender=Request)
 def request_post_save(sender, instance, created, **kwargs):
     if created:
         utils.create_intial_approvals(instance)
         periodic_tasks.send_request_created_notification(instance)
         periodic_tasks.send_approval_status_approved_notification(instance)
         utils.write_history(instance,instance.user,instance.status,comment=comment_create_request)
+
     
 
         
@@ -51,3 +51,6 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
     if not old_file == new_file:
         if os.path.isfile(old_file.path):
             os.remove(old_file.path)
+
+post_save.connect(request_post_save, sender=Request)
+post_save.connect(request_post_save, sender=Mission)
