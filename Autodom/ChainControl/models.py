@@ -233,12 +233,28 @@ class History(models.Model):
         verbose_name = 'История изменения'
         verbose_name_plural = 'История изменений'
 
+class Initiator(models.Model):
+    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
+    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
+    #request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
+    content_type = models.ForeignKey(ContentType,limit_choices_to=models.Q(model='request_type') | models.Q(model='mission_type') , on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    request_type = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = 'Иницатор'
+        verbose_name_plural = 'Инициаторы'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
 class Mission_type(models.Model):
     name = models.CharField(verbose_name='Наименование',max_length= 100)
     #roles = models.ManyToManyField(Role,through = 'Ordering', verbose_name='Порядок согласования')
     roles = GenericRelation ( Ordering )
     requestexecutor = GenericRelation ( RequestExecutor )
     ordering = GenericRelation ( Ordering )
+    initiator = GenericRelation ( Initiator )
     def __str__(self):
         return self.name
 
@@ -290,7 +306,7 @@ class Request_type(models.Model):
     roles = GenericRelation ( Ordering )
     requestexecutor = GenericRelation( RequestExecutor )
     ordering = GenericRelation ( Ordering )
-
+    initiator = GenericRelation ( Initiator )
     def __str__(self):
         return self.name
 
@@ -346,20 +362,7 @@ class Request(models.Model):
 
 
 
-class Initiator(models.Model):
-    user = models.ForeignKey(User,models.SET_NULL,blank=True,null=True, verbose_name='Пользователь')
-    role = models.ForeignKey(Role, on_delete = models.CASCADE, verbose_name='Роль')
-    #request_type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
-    content_type = models.ForeignKey(ContentType,limit_choices_to=models.Q(model='request_type') | models.Q(model='mission_type') , on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    request_type = GenericForeignKey('content_type', 'object_id')
 
-    class Meta:
-        verbose_name = 'Иницатор'
-        verbose_name_plural = 'Инициаторы'
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]
 
 
 

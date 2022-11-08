@@ -228,9 +228,11 @@
     </script>
 
     {% endif %}
-    <script type="text/javascript">
+
+    <!--<script type="text/javascript">
+
         var spartezSupportChat = {
-            portal: 4,
+            portal: 1,
             cloud: {
                 jiraId: '05a3440f-1faf-3698-b415-6c460383ccd5',
                 jiraUrl: 'https://hino-minassyants.atlassian.net',
@@ -249,8 +251,33 @@
             chatClass: 'chat', // additional class added to the chat widget
             // locale: 'en-us' // force a specified locale for displaying texts to the user
             // instead of detecting it from the browser
-        }
+        };
+       
     </script>
     <script type="text/javascript" src="https://chat-api.spartez-software.com/chat.js"></script>
+    <script type="text/javascript">
+        setTimeout(() => {
+            $.get("{% url 'get_sd_token'  %}", async function (token) {
+
+                try {
+
+
+                    let res = await spartezSupportChat.sso.login(token);
+                    //console.log(res);
+                    //console.log(JSON.stringify(spartezSupportChat, null, 4));
+                } catch (exception) {
+                    console.log(exception.message);
+                };
+
+
+            }
+            );
+        }, "10000");
+        
+        
+        
+      
+    </script>-->
+
 </body>
 </html>

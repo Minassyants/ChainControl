@@ -1,6 +1,7 @@
 from datetime import datetime
 import base64
 from io import BytesIO
+import jwt
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.generic.list import ListView
@@ -18,7 +19,7 @@ from channels.layers import get_channel_layer
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F, Value, CharField,Count
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import qrcode
 from Autodom import settings
@@ -79,6 +80,23 @@ def tg_reg_user(request):
         response['error'] = "Password is incorrect"
         return JsonResponse(response)
     return None
+
+@login_required
+def get_sd_token(request):
+    if request.method == 'GET':
+        header = {
+        "alg": "HS256",
+        "typ": "JWT"
+        };
+        payload = {
+            "email": request.user.email,
+            "displayName": f"{request.user.last_name} {request.user.first_name}",
+            "iat": datetime.now().timestamp() ,
+            "exp": datetime.now().timestamp() + 60 * 5
+            }
+        encoded_jwt = jwt.encode(payload,settings.SD_SECRET, algorithm="HS256", headers=header)
+        return HttpResponse(encoded_jwt)
+    return HttpResponseForbidden("Forbidden!")
 
 @login_required
 def index(request):

@@ -3,6 +3,7 @@ import logging
 from django import forms
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from . import models
 
 
@@ -168,13 +169,14 @@ class RequestForm(forms.ModelForm):
         self.fields['AVR_date'].required = False
         self.fields['invoice_details'].required = False
 
-        #if getattr(self.instance,'type',None) ==None:
-        #    try:
-        #        initial = kwargs.get('initial',None)
-        #        if initial != None:
-        #            self.fields['type'].choices = kwargs['initial']['user'].initiator_set.filter(content_type = ContentType.objects.get_for_model(models.Request_type).id).values_list('request_type_id','request_type__name')
-        #    except Exception as e:
-        #         logging.error(e)
+        if getattr(self.instance,'type',None) ==None:
+            try:
+                initial = kwargs.get('initial',None)
+                if initial != None:
+                    self.fields['type'].choices = models.Request_type.objects.filter(Q(initiator__user=kwargs['initial']['user'])|Q(initiator__role=kwargs['initial']['user'].userprofile.role)).values_list('id','name')
+                    #self.fields['type'].choices = kwargs['initial']['user'].initiator_set.values_list('request_types__id','request_types__name')
+            except Exception as e:
+                logging.error(e)
 
 
         if getattr(self.instance,'contract',None) !=None:
@@ -250,13 +252,14 @@ class MissionForm(forms.ModelForm):
         self.fields['comment'].required = False
         self.fields['date'].required = False
 
-        #if getattr(self.instance,'type',None) ==None:
-        #    try:
-        #        initial = kwargs.get('initial',None)
-        #        if initial != None:
-        #            self.fields['type'].choices = kwargs['initial']['user'].initiator_set.values_list('request_type_id','request_type__name')
-        #    except Exception as e:
-        #        logging.error(e)
+        if getattr(self.instance,'type',None) ==None:
+            try:
+                initial = kwargs.get('initial',None)
+                if initial != None:
+                    self.fields['type'].choices = models.Mission_type.objects.filter(Q(initiator__user=kwargs['initial']['user'])|Q(initiator__role=kwargs['initial']['user'].userprofile.role)).values_list('id','name')
+                    #self.fields['type'].choices = kwargs['initial']['user'].initiator_set.values_list('mission_types__id','mission_types__name')
+            except Exception as e:
+                logging.error(e)
 
        
 
