@@ -104,29 +104,37 @@ def get_sd_token(request):
 @login_required
 def list_to_excel(request):
     if request.method == 'GET':
-        form = List_to_excelForm()
-        context ={
-            'form':form,
-            }
-        return render(request,'ChainControl/list_to_excel.html',context)
-    elif request.method =='POST':
-        request_filter = List_to_excelForm(request.POST)
-        if request_filter.is_valid():
-            qs = Request.objects.none()
+
+            cur_user = request.user
+            approval_count = Count('approval')
+            approved_count = Count('approval', filter = Q(approval__new_status = Request.StatusTypes.APPROVED))
+            if request.GET['type'] == 'mission':
+                qs = Mission.objects.all().annotate(approval_count = approval_count).annotate(approved_count = approved_count)
+                qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
+                qs = qs.order_by('-id')
+                utils.set_approval_color(qs)
+            elif request.GET['type'] == 'request':
+
+                qs = Request.objects.all().annotate(approval_count = approval_count).annotate(approved_count = approved_count)
+                qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
+                qs = qs.order_by('-id')
+                utils.set_approval_color(qs)
+            else:
+                models_list = [Request, Mission]
+                q_list = []
+                
+                #qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
+                for m in models_list:
+                    v_n = m._meta.verbose_name
+                    q_list.append( m.objects.filter( Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role) ).distinct().annotate(approval_count = approval_count).annotate(approved_count = approved_count).annotate(model_name=Value(v_n, output_field=CharField())) )
+                for q in q_list:
             
-            ALLOWED = ('status',)
-            kwargs = dict(
-                (key, value)
-                for key, value in request_filter.cleaned_data.items()
-                if key in ALLOWED and (value != None and value != "")
-            )
-            if request_filter.data['period_start'] != None and request_filter.data['period_start'] != "":
-                kwargs['complete_before__gte'] = request_filter.data['period_start']
-            if request_filter.data['period_end'] != None and request_filter.data['period_end'] != "":
-                kwargs['complete_before__lte'] = request_filter.data['period_end']
-            for model_id in request_filter.cleaned_data['type_of_request']:
-                md = ContentType.objects.get_for_id(model_id).model_class()
-                qs = chain(qs , md.objects.filter(**kwargs))
+                    utils.set_approval_color(q)
+
+                qs = sorted( list(chain(*q_list)), key=attrgetter('date') , reverse= True  )
+
+           
+        
             qs = list(qs)
             
             buffer = BytesIO()
@@ -163,8 +171,8 @@ def list_to_excel(request):
                 i+=1
             workbook.close()
             buffer.seek(0)
-
-            return FileResponse(buffer, as_attachment=True, filename=f'Список заявок {kwargs["complete_before__gte"]}-{kwargs["complete_before__lte"]}.xlsx')
+            
+            return FileResponse(buffer, as_attachment=True, filename=f'Список заявок {datetime.now()}.xlsx')
 
     return HttpResponseForbidden("Forbidden!")
 @login_required
