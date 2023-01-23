@@ -1,5 +1,5 @@
 {% extends 'ChainControl/index.html' %}
-
+{% load static %}
 {% block title %}
 Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 {% endblock %}
@@ -13,12 +13,12 @@
         });
 
         $.getJSON("{% url 'get_clients' %}", function (Clients) {
-            
+
             $("#id_client").selectize()[0].selectize.clearOptions();
             $("#id_client").selectize()[0].selectize.load(function (callback) {
                 callback(Clients);
             });
-            
+
         });
 
         $.getJSON("{% url 'get_individuals' %}", function (Clients) {
@@ -32,6 +32,7 @@
 
         if ($("#id_is_accountable_person").is(":checked")) {
             $("#id_contract").removeAttr('required');
+            $("#id_client").removeAttr('required');
             $("#id_bank_account").removeAttr('required');
 
             $("#id_contract").selectize()[0].selectize.clear();
@@ -42,11 +43,12 @@
 
             $("#contract_div").toggle();
             $("#bank_account_div").toggle();
-            
+
 
         }
         else {
             $("#id_contract").attr('required', '');
+            $("#id_client").attr('required', '');
             $("#id_bank_account").attr('required', '');
 
             $("#id_individual").removeAttr('required');
@@ -59,10 +61,15 @@
             $("#individual_bank_account_div").toggle();
         };
 
-        
+
 
 
     });
+</script>
+<script type="text/javascript">
+    function CallPrint(id) {
+        var WinPrint = window.open('{% url "requests"%}/{{model_id}}/' + id + '/print', '', 'left=50,top=50,width=800,height=640,toolbar=0,scrollbars=1,status=0');
+    }
 </script>
 {% endblock %}
 
@@ -73,6 +80,8 @@
 <p class="h4 text-center">
     {{form.instance.get_status_display }}
 </p>
+
+<a onClick="javascript:CallPrint('{{object.id}}');"><img src="{% static 'ChainControl/images/printer.svg' %}" /> Печать</a>
 {% endblock %}
 
 {% block body %}
@@ -274,13 +283,13 @@
                             {% endwith %}
 
                         </div>
+                    </div>
                 </div>
             </div>
-                </div>
         </form>
         {% if user_can_cancel %}
         <div class="row g-3 p-3">
-            <form action="{% url 'set_request_canceled' id=form.instance.id %}" method="post">
+            <form action="{% url 'set_request_canceled' model_id=model_id id=form.instance.id %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="cancel" value="1" id="id_cancel">
                 <div class="row pt-2">
@@ -311,7 +320,7 @@
 </div>
 <script type="text/javascript">
     $("#id_type").oldValue = $("#id_type").val();
-    
+
     $("#id_contract").selectize()[0].selectize.clearOptions();
     $("#id_bank_account").selectize()[0].selectize.clearOptions();
     $("#id_individual_bank_account").selectize()[0].selectize.clearOptions();
@@ -356,6 +365,7 @@
     $("#id_is_accountable_person").on("change", function () {
         if ($(this).is(":checked")) {
             $("#id_contract").removeAttr('required');
+            $("#id_client").removeAttr('required');
             $("#id_bank_account").removeAttr('required');
 
             $("#id_contract").selectize()[0].selectize.clear();
@@ -368,6 +378,7 @@
         }
         else {
             $("#id_contract").attr('required', '');
+            $("#id_client").attr('required', '');
             $("#id_bank_account").attr('required', '');
 
             $("#id_individual").removeAttr('required');
@@ -385,6 +396,6 @@
 
     $(".approval-status").load("{% url 'get_approval_status' %}?model_id={{ model_id }}&id={{ form.instance.id }}");
 
-    
+
 </script>
         {% endblock %}

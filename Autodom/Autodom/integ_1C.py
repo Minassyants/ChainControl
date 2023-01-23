@@ -1,7 +1,7 @@
 import requests as rq
 from datetime import datetime
 import urllib
-from ChainControl.models import Client, Contract, Bank, Currency, Bank_account, Individual, Individual_bank_account
+from ChainControl.models import Client, Contract, Bank, Currency, Bank_account, Individual, Individual_bank_account, Country_of_residence
 from . import settings
 
 
@@ -14,6 +14,28 @@ except:
     USER_1C=settings.USER_1C
     PASSWORD_1C=settings.PASSWORD_1C
     ROOT_URL_1C=settings.ROOT_URL_1C
+
+def getCountry_of_residence():
+    payload ={
+        '$filter':'DeletionMark eq false',
+        '$format':'json',
+        '$orderby':'Description'}
+    
+    count = get1C("Catalog_КлассификаторСтранМира",payload,True)
+    #print(fr'total count {count}')
+    step=20
+    for i in range(0,count,step):
+        payload['$top'] = 20
+        payload['$skip'] = i
+        #print('skip='+str(payload['$skip']))
+        rjs = get1C("Catalog_КлассификаторСтранМира",payload)
+        for el in rjs['value']:
+            obj, _ = Country_of_residence.objects.get_or_create(guid=el['Ref_Key'])
+            
+            obj.guid = el['Ref_Key']
+            obj.name = el['Description']
+            obj.save()
+    return True
 
 def delClients():
     clients = Client.objects.filter(request__isnull=True)
@@ -49,6 +71,7 @@ def delClients():
 
 
 def getClients():
+    getCountry_of_residence()
     getCurrency()
     getBanks()
 
@@ -58,12 +81,12 @@ def getClients():
         '$orderby':'Description'}
     
     count = get1C("Catalog_Контрагенты",payload,True)
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_Контрагенты",payload)
         for el in rjs['value']:
             obj, _ = Client.objects.get_or_create(guid=el['Ref_Key'])
@@ -72,6 +95,13 @@ def getClients():
             obj.biin = el['ИдентификационныйКодЛичности']
             obj.name = el['Description']
             obj.KBE  = el['КБЕ']
+            try:
+                obj.country_of_residence = Country_of_residence.objects.get(guid=el['СтранаРезидентства_Key'])
+                if obj.country_of_residence.name.lower() != 'казахстан':
+                    obj.is_non_resident = True
+            except:
+                pass
+
             obj.save()
             #if created:
             #    obj.guid = el['Ref_Key']
@@ -92,12 +122,12 @@ def getContracts(client):
         '$orderby':'Description'}
     
     count = get1C("Catalog_ДоговорыКонтрагентов",payload,True)
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_ДоговорыКонтрагентов",payload)
         for el in rjs['value']:
             obj, _ = Contract.objects.get_or_create(guid=el['Ref_Key'], client=client)
@@ -133,12 +163,12 @@ def getBank_accounts(client):
     
     count = get1C("Catalog_БанковскиеСчета",payload,True)
    
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_БанковскиеСчета",payload)
         for el in rjs['value']:
             bank = Bank.objects.get(guid= el['Банк_Key'] ) if el['Банк_Key'] != '00000000-0000-0000-0000-000000000000' else None
@@ -173,12 +203,12 @@ def getBanks():
         '$orderby':'Description'}
     
     count = get1C("Catalog_Банки",payload,True)
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_Банки",payload)
         for el in rjs['value']:
             obj, _ = Bank.objects.get_or_create(guid=el['Ref_Key'])
@@ -203,12 +233,12 @@ def getCurrency():
         '$orderby':'Description'}
     
     count = get1C("Catalog_Валюты",payload,True)
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_Валюты",payload)
         for el in rjs['value']:
             obj, _ = Currency.objects.get_or_create(guid=el['Ref_Key'])
@@ -236,12 +266,12 @@ def getIndividual_bank_accounts(individual):
         '$orderby':'Description'}
     count = get1C("Catalog_КартСчета",payload,True)
    
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_КартСчета",payload)
         for el in rjs['value']:
             bank = Bank.objects.get(guid= el['Банк_Key'] ) if el['Банк_Key'] != '00000000-0000-0000-0000-000000000000' else None
@@ -264,12 +294,12 @@ def getIndividuals():
         '$orderby':'Description'}
     
     count = get1C("Catalog_ФизическиеЛица",payload,True)
-    print(fr'total count {count}')
+    #print(fr'total count {count}')
     step=20
     for i in range(0,count,step):
         payload['$top'] = 20
         payload['$skip'] = i
-        print('skip='+str(payload['$skip']))
+        #print('skip='+str(payload['$skip']))
         rjs = get1C("Catalog_ФизическиеЛица",payload)
         for el in rjs['value']:
             obj, _ = Individual.objects.get_or_create(guid=el['Ref_Key'])

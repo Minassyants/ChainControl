@@ -16,6 +16,7 @@
 
         if ($("#id_is_accountable_person").is(":checked")) {
             $("#id_contract").removeAttr('required');
+            $("#id_client").removeAttr('required');
 
 
             $("#id_contract").selectize()[0].selectize.clear();
@@ -31,7 +32,7 @@
         }
         else {
             $("#id_contract").attr('required', '');
-
+            $("#id_client").attr('required', '');
 
             $("#id_individual").removeAttr('required');
 
@@ -297,6 +298,7 @@
     $("#id_is_accountable_person").on("change", function () {
         if ($(this).is(":checked")) {
             $("#id_contract").removeAttr('required');
+            $("#id_client").removeAttr('required');
 
             $("#id_contract").selectize()[0].selectize.clear();
             $("#id_bank_account").selectize()[0].selectize.clear();
@@ -308,6 +310,7 @@
         }
         else {
             $("#id_contract").attr('required', '');
+            $("#id_client").attr('required', '');
 
             $("#id_individual").removeAttr('required');
 

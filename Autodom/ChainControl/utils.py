@@ -59,7 +59,7 @@ def write_history(request: Request,user : User , status : Request.StatusTypes, c
 
 def get_ordering_number(role,request_type):
     try:
-        role_order = request_type.ordering_set.get(role=role).order
+        role_order = request_type.ordering.get(role=role).order
         return role_order
     except:
         return -1

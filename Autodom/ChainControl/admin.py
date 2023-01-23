@@ -3,7 +3,7 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor, Individual_bank_account, Individual, Mission, Mission_type
+from .models import Client, Contract, Bank, Currency, Bank_account, Request, Request_type, Approval, Ordering, Payment_type, Additional_file, Role,UserProfile, Email_templates, History, Initiator, RequestExecutor, Individual_bank_account, Individual, Mission, Mission_type, Country_of_residence
 from django_celery_beat import admin as celery_admin
 from pwa_webpush.models import PushInformation
 
@@ -94,6 +94,7 @@ admin_site.register(Contract)
 admin_site.register(Bank)
 admin_site.register(Currency)
 admin_site.register(Bank_account)
+admin_site.register(Country_of_residence)
 admin_site.register(Request,RequestAdmin)
 admin_site.register(Mission,MissionAdmin)
 admin_site.register(Request_type,Request_typeAdmin)

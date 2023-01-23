@@ -25,8 +25,8 @@ channel_layer = get_channel_layer()
 @shared_task
 def send_request_creator_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
-    model = ContentType.objects.get(id=model_id).model_class()
-    el = get_object_or_404(model,id=request_id)
+    model = ContentType.objects.get(id=model_id)
+    el = get_object_or_404(model.model_class(),id=request_id)
     email_template = Email_templates.objects.get(email_type=email_type, content_type=model_id) #TODO: exception
     if el.user.email == "":
         msg = f'{el.user} не указана почта'
@@ -37,7 +37,7 @@ def send_request_creator_notification(model_id,request_id,email_type):
         
     
         email_text = Template(email_template.text).render(Context({"request":el,
-                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.id)})
+                                                                   "url1":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.id)})
                                                                    }))
         email_subject = Template(email_template.subject).render(Context({"request":el,
                                                                          
@@ -61,7 +61,7 @@ def send_request_creator_notification(model_id,request_id,email_type):
         payload = {"head": notification_subject,
                    "body": notification_text,
                    "icon": static('ChainControl/images/icons/icon.ico'),
-                   "url" : reverse('request_item', kwargs={"pk":str(el.id)}),
+                   "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.id)}),
                    }
         for usr in user_list:
             try:
@@ -76,7 +76,7 @@ def send_request_creator_notification(model_id,request_id,email_type):
         #tg_text = Template(email_template.tg_text).render(Context({"request":el}))
         data = {"messages": [{"chat_id": el.user.userprofile.tg_chat_id,
                                  "text":tg_text,
-                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.id)}),
+                                 "url":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.id)}),
                                  }]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -87,7 +87,7 @@ def send_request_creator_notification(model_id,request_id,email_type):
     text = {
         "subject" : notification_subject+"",
         "text" : notification_text+"",
-        "url" : reverse('request_item', kwargs={"pk":str(el.id)})
+        "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.id)})
         }
     async_to_sync(channel_layer.group_send)(str(el.user.id),{
         'type' : 'send_notif',
@@ -100,6 +100,7 @@ def send_request_creator_notification(model_id,request_id,email_type):
 @shared_task
 def send_next_approval_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
+    model = ContentType.objects.get(id=model_id)
     el = Approval.objects.filter(content_type = model_id,object_id = request_id,new_status = 'OA')
     el = el.order_by('order')[:1]
     el = el.get()
@@ -134,7 +135,7 @@ def send_next_approval_notification(model_id,request_id,email_type):
         
     
         email_text = Template(email_template.text).render(Context({"request":el.request,
-                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.request.id)})
+                                                                   "url1":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.request.id)})
                                                                    }))
         email_subject = Template(email_template.subject).render(Context({"request":el.request,
                                                                          
@@ -158,7 +159,7 @@ def send_next_approval_notification(model_id,request_id,email_type):
         payload = {"head": notification_subject,
                     "body": notification_text,
                     "icon": static('ChainControl/images/icons/icon.ico'),
-                    "url" : reverse('request_item', kwargs={"pk":str(el.request.id)}),
+                    "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.request.id)}),
                     }
         for usr in notif_user_list:
             try:
@@ -172,7 +173,7 @@ def send_next_approval_notification(model_id,request_id,email_type):
         tg_text = Template(email_template.tg_text).render(Context({"request":el.request}))
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
                                  "text":tg_text,
-                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(el.request.id)}),
+                                 "url":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.request.id)}),
                                  } for x in tg_user_list ]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -184,7 +185,7 @@ def send_next_approval_notification(model_id,request_id,email_type):
     text = {
         "subject" : notification_subject+"",
         "text" : notification_text+"",
-        "url" : reverse('request_item', kwargs={"pk":str(el.request.id)})
+        "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(el.request.id)})
         }
     for usr in user_list:
         async_to_sync(channel_layer.group_send)(str(usr.id),{
@@ -197,8 +198,8 @@ def send_next_approval_notification(model_id,request_id,email_type):
 @shared_task
 def send_executor_notification(model_id,request_id,email_type):
     #MAIL BLOCK #################
-    model = ContentType.objects.get(id=model_id).model_class()
-    request = get_object_or_404(model,id=request_id)
+    model = ContentType.objects.get(id=model_id)
+    request = get_object_or_404(model.model_class(),id=request_id)
     #role = request.type.executor
     no_emails = []
     mail_list = []
@@ -224,7 +225,7 @@ def send_executor_notification(model_id,request_id,email_type):
         
     
         email_text = Template(email_template.text).render(Context({"request":request,
-                                                                   "url1":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(request.id)})
+                                                                   "url1":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(request.id)})
                                                                    }))
         email_subject = Template(email_template.subject).render(Context({"request":request,
                                                                          
@@ -249,7 +250,7 @@ def send_executor_notification(model_id,request_id,email_type):
         payload = {"head": notification_subject,
                    "body": notification_text,
                    "icon": static('ChainControl/images/icons/icon.ico'),
-                   "url" : reverse('request_item', kwargs={"pk":str(request.id)}),
+                   "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(request.id)}),
                    }
         for usr in user_list:
             try:
@@ -263,7 +264,7 @@ def send_executor_notification(model_id,request_id,email_type):
         tg_text = Template(email_template.tg_text).render(Context({"request":request}))
         data = {"messages": [{"chat_id": x.userprofile.tg_chat_id,
                                  "text":tg_text,
-                                 "url":settings.BASE_URL+reverse('request_item', kwargs={"pk":str(request.id)}),
+                                 "url":settings.BASE_URL+reverse(f'{model.model.lower()}_item', kwargs={"pk":str(request.id)}),
                                  } for x in tg_user_list ]}
         rsp = rq.post("http://tg_bot:6666/send_msg",data = json.dumps(data),headers={'Content-type':'application/json'})
         if rsp.text=="False":
@@ -274,7 +275,7 @@ def send_executor_notification(model_id,request_id,email_type):
     text = {
         "subject" : notification_subject+"",
         "text" : notification_text+"",
-        "url" : reverse('request_item', kwargs={"pk":str(request.id)})
+        "url" : reverse(f'{model.model.lower()}_item', kwargs={"pk":str(request.id)})
         }
     for usr in user_list:
         async_to_sync(channel_layer.group_send)(str(usr.id),{
@@ -538,10 +539,11 @@ def get_individuals():
     return 'done'
 
 @shared_task
-def send_accounts_payable():
-    accounts_payable = list(Currency.objects.annotate(amount=Sum('request__sum', filter = Q(request__status='AP',)),date=Value(datetime.now(),DateField())).filter(amount__gt=0).values('date','code_str','amount'))
-    jp = json.dumps(accounts_payable,cls= DjangoJSONEncoder)
-    rq.post("https://hino-aa.minassyants.kz/api/update_accounts_payable",json=jp)
+def send_foreign_payment_schedule():
+    foreign_payment_schedule = list(Request.objects.filter(client__is_non_resident = True, date__month = datetime.now().strftime("%m")).values(
+        'id','complete_before','invoice_number','contract__name','client__name','sum','currency__code_str','invoice_details','client__country_of_residence__name','status'))
+    jp = json.dumps(foreign_payment_schedule,cls= DjangoJSONEncoder)
+    rq.post("https://hino-aa.minassyants.kz/api/update_foreign_payment_schedule",json=jp)
     return 'done'
 
 def send_mass_html_mail(datatuple, fail_silently=False, user=None, password=None, 

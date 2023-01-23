@@ -2,6 +2,8 @@ from datetime import datetime
 import base64
 from io import BytesIO
 import jwt
+import xlsxwriter
+from operator import attrgetter
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.generic.list import ListView
@@ -19,11 +21,12 @@ from channels.layers import get_channel_layer
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F, Value, CharField,Count
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 import qrcode
+from itertools import chain
 from Autodom import settings
-from .forms import RequestForm, MissionForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm, MissionSearchForm
+from .forms import RequestForm, MissionForm, AdditionalFileInlineFormset, ApprovalForm, RequestSearchForm, MissionSearchForm, List_to_excelForm
 from .models import Request, Request_type, Approval, Contract, Bank_account, Ordering, Additional_file, Client, Individual, Individual_bank_account, Mission, Mission_type
 from . import utils
 from . import periodic_tasks
@@ -99,8 +102,74 @@ def get_sd_token(request):
     return HttpResponseForbidden("Forbidden!")
 
 @login_required
+def list_to_excel(request):
+    if request.method == 'GET':
+        form = List_to_excelForm()
+        context ={
+            'form':form,
+            }
+        return render(request,'ChainControl/list_to_excel.html',context)
+    elif request.method =='POST':
+        request_filter = List_to_excelForm(request.POST)
+        if request_filter.is_valid():
+            qs = Request.objects.none()
+            
+            ALLOWED = ('status',)
+            kwargs = dict(
+                (key, value)
+                for key, value in request_filter.cleaned_data.items()
+                if key in ALLOWED and (value != None and value != "")
+            )
+            if request_filter.data['period_start'] != None and request_filter.data['period_start'] != "":
+                kwargs['complete_before__gte'] = request_filter.data['period_start']
+            if request_filter.data['period_end'] != None and request_filter.data['period_end'] != "":
+                kwargs['complete_before__lte'] = request_filter.data['period_end']
+            for model_id in request_filter.cleaned_data['type_of_request']:
+                md = ContentType.objects.get_for_id(model_id).model_class()
+                qs = chain(qs , md.objects.filter(**kwargs))
+            qs = list(qs)
+            
+            buffer = BytesIO()
+            workbook = xlsxwriter.Workbook(buffer)
+            worksheet = workbook.add_worksheet()
+            worksheet.write(0,0, '#')
+            worksheet.write(0,1, 'Тип Заявки')
+            worksheet.write(0,2, 'Автор')
+            worksheet.write(0,3, 'Контрагент/Физ. Лицо')
+            worksheet.write(0,4, 'Сумма')
+            worksheet.write(0,5, 'Валюта')
+            worksheet.write(0,6, 'Статус')
+            i = 1
+            for val in qs:
+                if type(val) == Request:
+                    if val.individual != None and val.individual !="":
+                        client = val.individual
+                    else:
+                        client = val.client
+                    doc_sum = val.sum
+                    currency = val.currency.code_str
+                elif type(val) == Mission:
+                    client = val.individual
+                    doc_sum = (val.cost_of_living if val.cost_of_living is not None else 0) + (val.daily_allowance if val.daily_allowance is not None else 0) + (val.ticket_price if val.ticket_price is not None else 0)
+                    currency = "KZT"
+
+                worksheet.write(i,0, val.id)
+                worksheet.write(i,1, val._meta.verbose_name.title())
+                worksheet.write(i,2, val.user.last_name + " " + val.user.first_name[0] + ".")
+                worksheet.write(i,3, str(client))
+                worksheet.write(i,4, doc_sum)
+                worksheet.write(i,5, currency)
+                worksheet.write(i,6, val.get_status_display())
+                i+=1
+            workbook.close()
+            buffer.seek(0)
+
+            return FileResponse(buffer, as_attachment=True, filename=f'Список заявок {kwargs["complete_before__gte"]}-{kwargs["complete_before__lte"]}.xlsx')
+
+    return HttpResponseForbidden("Forbidden!")
+@login_required
 def index(request):
-    return redirect('requests')
+    return redirect('all_requests')
 
 @login_required
 def docs(request):
@@ -195,6 +264,8 @@ def get_clients(request):
 def get_contracts(request):
     if request.method == 'GET':
         id = request.GET['id']
+        if id == "":
+            return JsonResponse([], safe=False)
         els = list(Contract.objects.filter(client__id = id).values('id','name').annotate(value=F('id'),text=F('name')))
         return JsonResponse(els, safe=False)
 
@@ -202,6 +273,8 @@ def get_contracts(request):
 def get_individual_bank_accounts(request):
     if request.method == 'GET':
         id = request.GET['id']
+        if id == "":
+            return JsonResponse([], safe=False)
         els = list(Individual_bank_account.objects.filter(individual__id = id).values('id','account_number').annotate(value=F('id'),text=F('account_number')))
         return JsonResponse(els, safe=False)
 
@@ -209,6 +282,8 @@ def get_individual_bank_accounts(request):
 def get_bank_accounts(request):
     if request.method == 'GET':
         id = request.GET['id']
+        if id == "":
+            return JsonResponse([], safe=False)
         els = list(Bank_account.objects.filter(client__id = id).values('id','account_number').annotate(value=F('id'),text=F('account_number')))
         return JsonResponse(els, safe=False)
 
@@ -270,6 +345,13 @@ def get_approval_form(request,id):
                     "form":form,
                 }
     return render(request,'ChainControl/approval_form.html',context)
+
+@login_required
+def get_all_requests_search_form(request):
+    form = RequestSearchForm()
+    return render(request,'ChainControl/all_requests_search_form.html', {
+        'form' : form 
+        })
 
 @login_required
 def get_mission_search_form(request):
@@ -479,6 +561,7 @@ class RequestListView(ListView):
         qs = qs.order_by('-id')
         utils.set_approval_color(qs)
         return qs
+
 @method_decorator(login_required,name='dispatch')
 class RequestCreateView(CreateView):
     model = Request
@@ -515,7 +598,7 @@ class RequestCreateView(CreateView):
                     messages.warning(request,'Не заполнена информация о подотчетном лице.')
                     return self.form_invalid(self.get_form())
             else:
-                if self.object.contract == None or (self.object.payment_type.cashless and self.object.bank_account == None):
+                if self.object.client == None or self.object.contract == None or (self.object.payment_type.cashless and self.object.bank_account == None):
                     messages.warning(request,'Не заполнена информация о контрагенте.')
                     return self.form_invalid(form)
 
@@ -613,21 +696,6 @@ class MissionCreateView(CreateView):
         if form.is_valid() :
             self.object = form.save(commit = False)
             self.object.user = request.user
-            #if self.object.is_accountable_person:
-            #    if self.object.individual == None or (self.object.payment_type.cashless and self.object.individual_bank_account == None):
-            #        messages.warning(request,'Не заполнена информация о подотчетном лице.')
-            #        return self.form_invalid(self.get_form())
-            #else:
-            #    if self.object.contract == None or (self.object.payment_type.cashless and self.object.bank_account == None):
-            #        messages.warning(request,'Не заполнена информация о контрагенте.')
-            #        return self.form_invalid(form)
-
-            #if self.object.currency == None:
-            #    if self.object.contract != None and self.object.contract.currency != None:
-            #        self.object.currency = self.object.contract.currency
-            #    else:
-            #        messages.warning(request,'В договоре не указана валюта. Необходимо указать валюту в заявке.')
-            #        return self.form_invalid(form)
 
             
             
@@ -804,3 +872,73 @@ class MissionUpdateView(UpdateView):
         if ((self.object.user != self.request.user and context['approving_user_can_edit'] == False) or self.object.status in DISALOWED_STATUS) and context['executor_can_edit'] == False:
             return redirect('mission_item',pk=self.object.pk)
         return super(MissionUpdateView,self).render_to_response(context)
+
+@login_required
+def all_requests(request):
+    cur_user = request.user
+    webpush = {"user": cur_user }
+    return render(request,'ChainControl/all_requests.html',{'webpush':webpush})
+
+@method_decorator(login_required,name='dispatch')
+class All_requestsListView(ListView):
+    template_name = "ChainControl/all_requests_list.html"
+    paginate_by = 20
+
+    def get_queryset(self):
+        models_list = [Request, Mission]
+        q_list = []
+        cur_user = self.request.user
+        approval_count = Count('approval')
+        approved_count = Count('approval', filter = Q(approval__new_status = Mission.StatusTypes.APPROVED))
+        #qs = super(MissionListView, self).get_queryset().annotate(approval_count = approval_count).annotate(approved_count = approved_count)
+
+        mode = self.request.GET.get('mode','requests_for_approval')
+        
+        if mode == 'my_requests':
+            #qs = qs.filter(user=cur_user)
+            for m in models_list:
+                v_n = m._meta.verbose_name
+                q_list.append( m.objects.filter(user=cur_user).annotate(approval_count = approval_count).annotate(approved_count = approved_count).annotate(model_name=Value(v_n, output_field=CharField())) )
+
+        elif mode == 'requests_to_be_done':
+            #qs =qs.filter(Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role)).distinct()
+            for m in models_list:
+                v_n = m._meta.verbose_name
+                q_list.append( m.objects.filter( Q(status='AP') & Q(type__requestexecutor__role=cur_user.userprofile.role) ).distinct().annotate(approval_count = approval_count).annotate(approved_count = approved_count).annotate(model_name=Value(v_n, output_field=CharField())) )
+
+        elif mode == 'all_requests' and cur_user.is_staff:
+            #pass
+            for m in models_list:
+                v_n = m._meta.verbose_name
+                q_list.append( m.objects.all().annotate(approval_count = approval_count).annotate(approved_count = approved_count).annotate(model_name=Value(v_n, output_field=CharField())) )
+        else:
+            #qs = qs.filter(Q(approval__new_status='OA', status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role))).distinct()
+            for m in models_list:
+                v_n = m._meta.verbose_name
+                q_list.append( m.objects.filter( Q(approval__new_status='OA', status='OA') & (Q(approval__user=cur_user) | Q(approval__role=cur_user.userprofile.role)) ).distinct().annotate(approval_count = approval_count).annotate(approved_count = approved_count).annotate(model_name=Value(v_n, output_field=CharField())) )
+
+
+        ALLOWED = ('id','date','user','status')
+        request_filter = MissionSearchForm(self.request.GET)
+        if request_filter.is_valid():
+            kwargs = dict(
+                (key, value)
+                for key, value in request_filter.cleaned_data.items()
+                if key in ALLOWED and (value != None and value != "")
+            )
+            if request_filter.cleaned_data['expired']:
+                kwargs['status__in'] = ['OA','AP']
+                kwargs['complete_before__lte'] = datetime.now()
+            for i, q in enumerate(q_list):
+                q_list[i] = q.filter(**kwargs)
+
+        for q in q_list:
+            
+            utils.set_approval_color(q)
+
+        qs = sorted( list(chain(*q_list)), key=attrgetter('date') , reverse= True  )
+
+        
+        
+        
+        return qs

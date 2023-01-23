@@ -134,7 +134,7 @@
                         </div>
                         <div class="col-12">
                             <fieldset>
-                                
+
                                 <div class="col-md-12">
                                     <label for="inputcomment" class="form-label">Комментарий</label>
                                     <text class="form-control">{{object.comment}}</text>
@@ -148,7 +148,7 @@
                                     {{ addfiles.non_form_errors }}
                                     {{ addfiles.management_form }}
 
-                                    {% for f in object.additional_file_set.all %}
+                                    {% for f in object.additional_file.all %}
                                     <div class="col-md-12">
                                         <a href="{{f.file.url}}" target="_blank" rel="noopener noreferrer">{{f.file}}</a>
                                         <a href="{{f.file.url}}" download class="btn btn-primary">Скачать</a>
@@ -221,7 +221,7 @@
         {% endif %}
         {% if user_can_cancel %}
         <div class="row g-3 p-3">
-            <form action="{% url 'set_request_canceled' id=object.id %}" method="post">
+            <form action="{% url 'set_request_canceled' model_id=model_id id=object.id %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="cancel" value="1" id="id_cancel">
                 <div class="row pt-2">

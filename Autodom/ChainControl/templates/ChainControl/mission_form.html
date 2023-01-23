@@ -1,5 +1,5 @@
 {% extends 'ChainControl/index.html' %}
-
+{% load static %}
 {% block title %}
 Заявка #{{form.instance.id}} от {{form.instance.date | date:'d M Y'}} г.
 {% endblock %}
@@ -13,12 +13,12 @@
         });
 
         $.getJSON("{% url 'get_clients' %}", function (Clients) {
-            
+
             $("#id_client").selectize()[0].selectize.clearOptions();
             $("#id_client").selectize()[0].selectize.load(function (callback) {
                 callback(Clients);
             });
-            
+
         });
 
         $.getJSON("{% url 'get_individuals' %}", function (Clients) {
@@ -30,12 +30,18 @@
 
         });
 
-        
 
-        
+
+
 
 
     });
+</script>
+
+<script type="text/javascript">
+    function CallPrint(id) {
+        var WinPrint = window.open('{% url "missions" %}/{{model_id}}/' + id + '/print', '', 'left=50,top=50,width=800,height=640,toolbar=0,scrollbars=1,status=0');
+    }
 </script>
 {% endblock %}
 
@@ -46,6 +52,8 @@
 <p class="h4 text-center">
     {{form.instance.get_status_display }}
 </p>
+
+<a onClick="javascript:CallPrint('{{object.id}}');"><img src="{% static 'ChainControl/images/printer.svg' %}" /> Печать</a>
 {% endblock %}
 
 {% block body %}
@@ -236,7 +244,7 @@
 
         {% if user_can_cancel %}
         <div class="row g-3 p-3">
-            <form action="{% url 'set_request_canceled' id=form.instance.id %}" method="post">
+            <form action="{% url 'set_request_canceled' model_id=model_id id=form.instance.id %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="cancel" value="1" id="id_cancel">
                 <div class="row pt-2">
@@ -286,7 +294,7 @@
 </div>
 <script type="text/javascript">
     $("#id_type").oldValue = $("#id_type").val();
-    
+
 
     $("#id_type").on("change", function () {
 
@@ -317,6 +325,6 @@
         });
     });
     {% endif %}
-    
+
 </script>
         {% endblock %}

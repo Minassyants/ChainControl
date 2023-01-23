@@ -113,6 +113,8 @@
     <Content Include="ChainControl\templates\ChainControl\docs\guide_list.html" />
     <Content Include="ChainControl\templates\ChainControl\email\email.html" />
     <Content Include="ChainControl\templates\ChainControl\missions.html" />
+    <Content Include="ChainControl\templates\ChainControl\all_requests.html" />
+    <Content Include="ChainControl\templates\ChainControl\all_requests_search_form.html" />
     <Content Include="ChainControl\templates\ChainControl\request_create_form.html" />
     <Content Include="ChainControl\templates\ChainControl\mission_create_form.html" />
     <Content Include="ChainControl\templates\ChainControl\index.html" />
@@ -123,6 +125,8 @@
     <Content Include="ChainControl\templates\ChainControl\mission_detail.html" />
     <Content Include="ChainControl\templates\ChainControl\mission_form.html" />
     <Content Include="ChainControl\templates\ChainControl\mission_print.html" />
+    <Content Include="ChainControl\templates\ChainControl\list_to_excel.html" />
+    <Content Include="ChainControl\templates\ChainControl\all_requests_list.html" />
     <Content Include="ChainControl\templates\ChainControl\request_print.html" />
     <Content Include="ChainControl\templates\ChainControl\request_detail.html" />
     <Content Include="ChainControl\templates\ChainControl\request_form.html" />

@@ -1,0 +1,80 @@
+{% extends 'ChainControl/index.html' %}
+{% load static %}
+{% block title %}
+Экспорт в Excel
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('select').selectize({
+            sortField: 'text'
+        });
+    });
+</script>
+
+
+{% endblock %}
+
+{% block descr %}
+<p class="h1 text-center">
+    Экспорт в Excel
+</p>
+
+
+{% endblock %}
+
+{% block body %}
+
+        <form action="" method="post" class="row g-3 p-3 " enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-10 border-end">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <fieldset>
+                                    <legend> Параметры эскпорта</legend>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label for="inputdestination" class="form-label">Начало периода</label>
+                                            {{form.period_start}}
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="inputdestination" class="form-label">Конец периода</label>
+                                            {{form.period_end}}
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="inputtype_of_request" class="form-label">Тип заявки</label>
+                                            {{form.type_of_request}}
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="inputstatus" class="form-label">Статус</label>
+                                            {{form.status}}
+                                        </div>
+
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row pt-2">
+
+                    <div class="col-12 ps-2">
+                        <button type="submit" class="btn btn-primary">
+                            Выгрузить
+                        </button>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+        </form>
+        
+        {% endblock %}

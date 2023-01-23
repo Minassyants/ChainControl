@@ -7,11 +7,38 @@ from django.db.models import Q
 from . import models
 
 
+TYPE_OF_REQUEST_CHOICES =(
+    (ContentType.objects.get_for_model(models.Request).id , "Заявка на оплату"),
+    (ContentType.objects.get_for_model(models.Mission).id , "Заявка на командирование"),
+    )
 
+STATUS_CHOICES = models.Request.StatusTypes.choices
+STATUS_CHOICES.remove(STATUS_CHOICES[5])
+STATUS_CHOICES.remove(STATUS_CHOICES[0])
 
 class DateInput(forms.DateInput):
     input_type = 'date'
     input_formats = ['%d.%m.%y']
+
+
+
+class List_to_excelForm(forms.Form):
+
+    period_start = forms.DateField(widget=DateInput(attrs={'class' : 'form-control',
+                                                 }))
+    period_end = forms.DateField(widget=DateInput(attrs={'class' : 'form-control',
+                                                 }))
+    status = forms.ChoiceField(choices= STATUS_CHOICES+ [("","----"),], required=False)
+
+    type_of_request = forms.MultipleChoiceField(choices = TYPE_OF_REQUEST_CHOICES)
+
+    class Meta:
+        widgets= {
+            'period_start' : forms.DateInput(format='%Y-%m-%d'),
+            'period_end' : forms.DateInput(format='%Y-%m-%d'),
+            'status' : forms.Select(attrs={'class' : 'form-control',}),
+            'type_of_request': forms.CheckboxSelectMultiple(),
+            }
 
 
 

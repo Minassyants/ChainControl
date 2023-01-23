@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 
 
+
 class Role(models.Model):
     name= models.CharField(verbose_name='Наименование',max_length = 100,blank=True,null=True)
     def __str__(self):
@@ -39,11 +40,24 @@ class Individual(models.Model):
         verbose_name = 'Физическое лицо'
         verbose_name_plural = 'Физические лица'
 
+class Country_of_residence(models.Model):
+    name= models.CharField(verbose_name='Наименование',max_length = 100,blank=True,null=True)
+    guid = models.CharField(verbose_name = 'ГУИД 1с',max_length = 36)
+    
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Страна резидентства'
+        verbose_name_plural = 'Страны резидентства'
+
 class Client(models.Model):
     guid = models.CharField(verbose_name = 'ГУИД 1с',max_length = 36)
     biin= models.CharField(verbose_name='ИИН',max_length = 12, blank=True,null=True)
     name= models.CharField(verbose_name='Наименование', max_length = 150)
     KBE = models.CharField(verbose_name='КБЕ', max_length = 2, blank=True,null=True)
+    is_non_resident = models.BooleanField(verbose_name="Нерезидент", default= False)
+    country_of_residence = models.ForeignKey(Country_of_residence,on_delete = models.SET_NULL,verbose_name='Страна резидентства', null=True)
     def __str__(self):
         return self.name +", "+self.biin
 
@@ -284,7 +298,7 @@ class Mission(models.Model):
     cost_of_living = models.FloatField(verbose_name = 'Стоимость проживания',blank= True, null= True)
     daily_allowance = models.FloatField(verbose_name = 'Суточные',blank= True, null= True)
     status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.OPEN)
-    comment = models.CharField(verbose_name ='Комментарий',max_length = 200,blank=True,null=True)
+    comment = models.CharField(verbose_name ='Комментарий',max_length = 300,blank=True,null=True)
     additional_file = GenericRelation( Additional_file )
     approval = GenericRelation ( Approval )
     history = GenericRelation ( History )
@@ -294,6 +308,9 @@ class Mission(models.Model):
 
     def get_absolute_url(self):
         return reverse('mission_item', args=[str(self.id)])
+
+    def get_sum_display(self):
+        return str((self.cost_of_living if self.cost_of_living is not None else 0)  + (self.ticket_price if self.ticket_price is not None else 0) + (self.daily_allowance if self.daily_allowance is not None else 0)) + " (KZT)"
 
     class Meta:
         ordering = ["date_from"]
@@ -326,16 +343,16 @@ class Request(models.Model):
     date = models.DateField(verbose_name='Дата создания',default=datetime.now,blank=True)
     type = models.ForeignKey(Request_type, on_delete = models.CASCADE, verbose_name='Вид заявки')
     payment_type = models.ForeignKey(Payment_type, on_delete = models.CASCADE, verbose_name='Тип оплаты')
-    client = models.ForeignKey(Client, on_delete = models.CASCADE, verbose_name='Контрагент')
+    client = models.ForeignKey(Client, on_delete = models.CASCADE, verbose_name='Контрагент',blank=True,null=True)
     contract = models.ForeignKey(Contract, on_delete = models.CASCADE, verbose_name='Договор',blank=True,null=True)
     bank_account = models.ForeignKey(Bank_account, on_delete = models.CASCADE, verbose_name='Банковский счет',blank=True,null=True)
     complete_before = models.DateField(verbose_name='Завершить до')
-    invoice_number = models.CharField(verbose_name='Номер счета на оплату', max_length = 20)
+    invoice_number = models.CharField(verbose_name='Номер счета на оплату', max_length = 100)
     invoice_date = models.DateField(verbose_name='Дата счета на оплату')
-    invoice_details = models.CharField(verbose_name='Содержание',max_length = 200,blank=True,null=True)
+    invoice_details = models.CharField(verbose_name='Содержание',max_length = 300,blank=True,null=True)
     AVR_date = models.DateField(verbose_name='Дата оказания услуг/передачи товара',blank=True,null=True)
     sum = models.FloatField(verbose_name = 'Сумма')
-    comment = models.CharField(verbose_name ='Комментарий',max_length = 200,blank=True,null=True)
+    comment = models.CharField(verbose_name ='Комментарий',max_length = 300,blank=True,null=True)
     currency = models.ForeignKey(Currency, on_delete = models.CASCADE,verbose_name='Валюта',blank=True,null=True)
     status = models.CharField(verbose_name='Статус заявки', max_length = 2, choices=StatusTypes.choices, default=StatusTypes.ON_APPROVAL)
     is_accountable_person = models.BooleanField(verbose_name='Оплата подотчетному лицу', default= False)
@@ -351,10 +368,13 @@ class Request(models.Model):
     def get_absolute_url(self):
         return reverse('request_item', args=[str(self.id)])
 
+    def get_sum_display(self):
+        return str(self.sum) + " ("+str(self.currency)+")"
+
     class Meta:
         ordering = ["complete_before"]
-        verbose_name = 'Заявка'
-        verbose_name_plural = "Заявки"
+        verbose_name = 'Заявка на оплату'
+        verbose_name_plural = "Заявки на оплату"
 
 
 
