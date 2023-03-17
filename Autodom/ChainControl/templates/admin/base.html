@@ -1,0 +1,29 @@
+{% extends 'admin/base.html' %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    :root {
+        --primary: #8dc7b4;
+        --secondary: #a8ecd6;
+        --link-fg: #000000;
+        --link-selected-fg: #8f5bb2;
+        --body-fg: #000000;
+        --body-bg: #fff;
+        --body-quiet-color: #000000;
+        --body-loud-color: #000000;
+        --header-color: #000000;
+        --header-branding-color: #000000;
+        --primary-fg: #000000;
+        --link-hover-color: #000000;
+        --header-link-color: #000000;
+        --accent: grey;
+
+    }
+    #user-tools a:focus, #user-tools a:hover {
+        
+        
+        color: var(--link-fg);
+    }
+   
+</style>
+{% endblock %}

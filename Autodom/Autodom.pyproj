@@ -5,6 +5,8 @@
     <RootNamespace>Autodom</RootNamespace>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <WebBrowserPort>8000</WebBrowserPort>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
+    <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -36,7 +38,13 @@
     <Compile Include="Autodom\celery_init.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Autodom\consumers.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Autodom\integ_1C.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Autodom\rounting.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Autodom\tasks.py">
@@ -52,11 +60,20 @@
     </Compile>
     <Compile Include="ChainControl\migrations\__init__.py" />
     <Compile Include="ChainControl\models.py" />
+    <Compile Include="ChainControl\russian_strings.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ChainControl\periodic_tasks.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ChainControl\signalevents.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ChainControl\tests.py" />
     <Compile Include="ChainControl\urls.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ChainControl\utils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ChainControl\views.py" />
@@ -66,32 +83,128 @@
     <Compile Include="Autodom\settings.py" />
     <Compile Include="Autodom\urls.py" />
     <Compile Include="Autodom\wsgi.py" />
+    <Compile Include="pwa_webpush\admin.py" />
+    <Compile Include="pwa_webpush\apps.py" />
+    <Compile Include="pwa_webpush\app_settings.py" />
+    <Compile Include="pwa_webpush\custom_site_class.py" />
+    <Compile Include="pwa_webpush\forms.py" />
+    <Compile Include="pwa_webpush\migrations\0001_initial.py" />
+    <Compile Include="pwa_webpush\migrations\0002_auto_20220718_1750.py" />
+    <Compile Include="pwa_webpush\migrations\__init__.py" />
+    <Compile Include="pwa_webpush\models.py" />
+    <Compile Include="pwa_webpush\templatetags\pwa_webpush.py" />
+    <Compile Include="pwa_webpush\templatetags\__init__.py" />
+    <Compile Include="pwa_webpush\urls.py" />
+    <Compile Include="pwa_webpush\utils.py" />
+    <Compile Include="pwa_webpush\views.py" />
+    <Compile Include="pwa_webpush\__init__.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ChainControl\templates\ChainControl\createRequest.html" />
+    <Content Include="ChainControl\templates\admin\base.html" />
+    <Content Include="ChainControl\templates\ChainControl\approval_form.html" />
+    <Content Include="ChainControl\templates\ChainControl\approval_status.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\execution.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\approval.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\request_life_cycle.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\create.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\app_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\request_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\main_screen_description.html" />
+    <Content Include="ChainControl\templates\ChainControl\docs\guide_list.html" />
+    <Content Include="ChainControl\templates\ChainControl\email\email.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_create_form.html" />
     <Content Include="ChainControl\templates\ChainControl\index.html" />
     <Content Include="ChainControl\templates\ChainControl\login_user.html" />
+    <Content Include="ChainControl\templates\ChainControl\ordering_for_new_request.html" />
     <Content Include="ChainControl\templates\ChainControl\requests.html" />
-    <Content Include="ChainControl\templates\ChainControl\requests_all.html" />
-    <Content Include="ChainControl\templates\ChainControl\requests_for_approval.html" />
-    <Content Include="ChainControl\templates\ChainControl\requests_my_requests.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_print.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_detail.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_form.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_list.html" />
+    <Content Include="ChainControl\templates\ChainControl\request_search_form.html" />
+    <Content Include="ChainControl\templates\ChainControl\tg_qrcode.html" />
+    <Content Include="pwa_webpush\migrations\__pycache__\0001_initial.cpython-37.pyc" />
+    <Content Include="pwa_webpush\migrations\__pycache__\0002_auto_20220718_1750.cpython-37.pyc" />
+    <Content Include="pwa_webpush\migrations\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="pwa_webpush\static\css\django-pwa-app.css" />
+    <Content Include="pwa_webpush\static\fonts\bootstrap\glyphicons-halflings-regular.eot" />
+    <Content Include="pwa_webpush\static\fonts\bootstrap\glyphicons-halflings-regular.svg" />
+    <Content Include="pwa_webpush\static\fonts\bootstrap\glyphicons-halflings-regular.ttf" />
+    <Content Include="pwa_webpush\static\fonts\bootstrap\glyphicons-halflings-regular.woff" />
+    <Content Include="pwa_webpush\static\fonts\bootstrap\glyphicons-halflings-regular.woff2" />
+    <Content Include="pwa_webpush\static\images\icons\icon-128x128.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-144x144.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-152x152.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-192x192.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-384x384.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-512x512.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-72x72.png" />
+    <Content Include="pwa_webpush\static\images\icons\icon-96x96.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1125x2436.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1242x2208.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1242x2688.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1536x2048.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1668x2224.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-1668x2388.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-2048x2732.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-640x1136.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-750x1334.png" />
+    <Content Include="pwa_webpush\static\images\icons\splash-828x1792.png" />
+    <Content Include="pwa_webpush\static\images\icons\Thumbs.db" />
+    <Content Include="pwa_webpush\static\webpush\webpush.js" />
+    <Content Include="pwa_webpush\templates\manifest.json" />
+    <Content Include="pwa_webpush\templates\offline.html" />
+    <Content Include="pwa_webpush\templates\pwa.html" />
+    <Content Include="pwa_webpush\templates\serviceworker.js" />
+    <Content Include="pwa_webpush\templates\webpush.js" />
+    <Content Include="pwa_webpush\templates\webpush_button.html" />
+    <Content Include="pwa_webpush\templates\webpush_header.html" />
+    <Content Include="pwa_webpush\templatetags\__pycache__\pwa_webpush.cpython-37.pyc" />
+    <Content Include="pwa_webpush\templatetags\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\admin.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\apps.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\app_settings.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\custom_site_class.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\forms.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\models.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\urls.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\utils.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\views.cpython-37.pyc" />
+    <Content Include="pwa_webpush\__pycache__\__init__.cpython-37.pyc" />
     <Content Include="requirements.txt" />
     <Content Include="static\ChainControl\jquery.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Autodom\" />
+    <Folder Include="ChainControl\templates\admin\" />
     <Folder Include="ChainControl\" />
     <Folder Include="ChainControl\migrations\" />
     <Folder Include="ChainControl\templates\" />
     <Folder Include="ChainControl\templates\ChainControl\" />
+    <Folder Include="ChainControl\templates\ChainControl\email\" />
+    <Folder Include="ChainControl\templates\ChainControl\docs\" />
+    <Folder Include="pwa_webpush\" />
+    <Folder Include="pwa_webpush\migrations\" />
+    <Folder Include="pwa_webpush\migrations\__pycache__\" />
+    <Folder Include="pwa_webpush\static\" />
+    <Folder Include="pwa_webpush\static\css\" />
+    <Folder Include="pwa_webpush\static\fonts\" />
+    <Folder Include="pwa_webpush\static\fonts\bootstrap\" />
+    <Folder Include="pwa_webpush\static\images\" />
+    <Folder Include="pwa_webpush\static\images\icons\" />
+    <Folder Include="pwa_webpush\static\webpush\" />
+    <Folder Include="pwa_webpush\templates\" />
+    <Folder Include="pwa_webpush\templatetags\" />
+    <Folder Include="pwa_webpush\templatetags\__pycache__\" />
+    <Folder Include="pwa_webpush\__pycache__\" />
     <Folder Include="static\" />
     <Folder Include="static\ChainControl\" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
       <Id>env</Id>
-      <Version>3.7</Version>
-      <Description>env (Python 3.7 (64-bit))</Description>
+      <Version>3.9</Version>
+      <Description>env (Python 3.9 (64-bit))</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>

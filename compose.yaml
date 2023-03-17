@@ -4,11 +4,13 @@ services:
   web:
     image: killka1997/autodom-img
    
+    command: daphne -b 0.0.0.0 -p 8000 Autodom.wsgi:application
 
     expose:
     - 8000
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
+      - media_volume:/Autodom-app/Autodom/media/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -16,6 +18,16 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - LETSENCRYPT_HOST=localhost
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=8000
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
+      - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
     depends_on:
       - redis
       - db
@@ -23,9 +35,9 @@ services:
   celery:
     image: killka1997/autodom-img
    
-    command: celery -A Autodom worker -P solo --loglevel=info
+    command: celery -A Autodom worker --autoscale=5,1 --loglevel=info
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -33,6 +45,16 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
+      - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - web
       - redis
@@ -42,7 +64,7 @@ services:
    
     command: celery -A Autodom beat -l DEBUG
     volumes:
-      - static_volume:/static/:rw
+      - static_volume:/Autodom-app/Autodom/static/:rw
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -50,6 +72,16 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
+      - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - web
       - redis
@@ -65,8 +97,8 @@ services:
     image: killka1997/autodom-img
    
     command: celery -A Autodom flower --address=0.0.0.0 --port=5566
-    ports:
-     - 5566:5566
+    expose:
+     - 5566
     environment:
       - DJANGO_SETTINGS_MODULE=Autodom.settings
       - BROKER_URL=redis://redis:6379
@@ -74,6 +106,16 @@ services:
       - POSTGRES_PASSWORD=qwerty1234
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - ALLOWED_HOST=jelastic.minassyants.kz
+      - EMAIL_HOST=smtp.mail.ru
+      - EMAIL_PORT=465
+      - EMAIL_HOST_USER=info@minassyants.kz
+      - EMAIL_HOST_PASSWORD=SyIatpOYi~33
+      - ADMIN_NAME_EMAIL=Alexandr:killka1997@gmail.com
+      - USER_1C=МА_АДМИН
+      - PASSWORD_1C=741852
+      - ROOT_URL_1C=http://185.233.3.224/Hino_test/odata/standard.odata/
     depends_on:
       - celery
       - redis
@@ -90,17 +132,44 @@ services:
       - POSTGRES_USER=admin123
       - POSTGRES_HOST=db
 
-  nginx:
-      build: ./nginx
-      ports:
-        - 80:80
-      volumes:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/vhost.d
+      - /etc/nginx/certs
+      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/default_location:/etc/nginx/vhost.d/default_location
       - static_volume:/home/app/web/staticfiles/:rw
-      depends_on:
-        - web
+      - media_volume:/home/app/web/media/:rw
+ 
+  ssl-generator:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+  tg_bot:
+    image: killka1997/cctelegrambot
+    environment:
+    - TELEGRAM_TOKEN=5776306301:AAGITlyxjF3tUyE6Md3g5IWDTQaW3qGfy8Q
+    - WEB_URL=http://web:8000
+    - HOST=0.0.0.0
+    - PORT=6666
+    - TG_ADMIN=753981098
+    depends_on:
+    - web
+
 
 volumes:
   static_volume:
+    driver: local
+  media_volume:
     driver: local
   postgres_data:
     driver: local

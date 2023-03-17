@@ -1,0 +1,2 @@
+start "autodom-img" cmd  /c docker build -t killka1997/autodom-img "D:\Projects VS\Minassyants\ChainControl"
+start "cctelegrambot" cmd  /c docker build -t killka1997/cctelegrambot "D:\Projects VS\CCTelegramBot"

@@ -1,0 +1,136 @@
+{% load static %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+<script src="{% static 'ChainControl/jquery.js' %}"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        window.addEventListener('afterprint', (event) => {
+            window.close();
+        });
+        window.print();
+    });
+</script>
+<p class="h4 text-center pt-3">
+    {{company_name}}
+</p>
+<p class="h4 text-center pt-3">
+    Заявка #{{object.id}} от {{object.date | date:'d M Y'}} г.
+</p>
+<hr />
+
+
+    
+        
+            
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <fieldset>
+
+                                    <div class="col-12">
+
+                                        <p>Заявитель: {{ object.user.last_name }} {{ object.user.first_name|make_list|first }}.</p>
+
+                                    </div>
+                                    <div class="col-12">
+
+                                        <p>Вид заявки: {{object.type}}</p>
+
+                                    </div>
+
+
+                                    <div class="col-12">
+                                        <p>Тип оплаты: {{object.payment_type}}</p>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <fieldset>
+                                    <p class="h4"> Данные о контрагенте</p>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <p>Контрагент: {{object.client}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Договор: {{object.contract}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Номер счета: {{object.bank_account}}</p>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="col-md-12">
+                                <fieldset>
+                                    <p class="h4"> Данные счета на оплату</p>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-md-4">
+
+                                            <p>Номер счета: {{object.invoice_number}}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <p>Дата счета: {{object.invoice_date | date:'d M Y'}}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <p>Дата оказания услуг: {{object.AVR_date | date:'d M Y'}}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p>Содержание: {{object.invoice_details}}</p>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <fieldset>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <p>Сумма: {{object.sum}}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p>Валюта: {{object.currency}}</p>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                        
+                        <div class="col-12">
+                            <br />
+                            <p class="h4">Участники согласования</p>
+                            <hr />
+                            <table class="table table-borderless">
+
+                                <tbody>
+
+                                    {% for el in els %}
+                                    <tr>
+                                        <td>
+                                            {{ el.user.userprofile.role }} /
+                                        </td>
+                                        <td>
+                                            {{ el.user.last_name }} {{ el.user.first_name|make_list|first }}.
+                                        </td>
+                                        <td>
+                                            - {{ el.get_new_status_display }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+

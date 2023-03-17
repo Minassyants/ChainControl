@@ -1,26 +1,53 @@
-import json
-from django.db.models.signals import post_save
+import os
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-from django.core.mail import send_mail
-from django_celery_beat.models import PeriodicTask,IntervalSchedule
-from .models import Request, Ordering, Approval
-
+from .models import Request, Approval, Additional_file
+from . import periodic_tasks
+from . import utils
+from .russian_strings import comment_create_request
 
 @receiver(post_save, sender=Request)
 def request_post_save(sender, instance, created, **kwargs):
     if created:
-        els = Ordering.objects.filter(request_type=instance.type).order_by('order')
-        for el in els:
-            Approval.objects.create(user=el.user,role=el.role,order=el.order,request=instance)
+        utils.create_intial_approvals(instance)
+        periodic_tasks.send_request_created_notification(instance)
+        periodic_tasks.send_approval_status_approved_notification(instance)
+        utils.write_history(instance,instance.user,instance.status,comment=comment_create_request)
+    
 
-        schedule , created = IntervalSchedule.objects.get_or_create(
-        every=10,
-        period=IntervalSchedule.SECONDS,
-    )
-        PeriodicTask.objects.create(
-        interval=schedule,                  # we created this above.
-        name='Initial notification request-'+str(instance.id),          # simply describes this periodic task.
-        task='Autodom.tasks.sendemail',  # name of task.
-        args=json.dumps([instance.id,]),
-        one_off=True,
-    )
+        
+@receiver(post_save, sender=Approval)
+def approval_post_save(sender, instance, created, **kwargs):
+    if not created and instance.new_status != Request.StatusTypes.ON_APPROVAL:
+        utils.update_request_status(instance.request,instance, comment = getattr(instance, '_comment', None))
+        
+
+@receiver(post_delete, sender=Additional_file)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem
+    when corresponding `MediaFile` object is deleted.
+    """
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)
+
+@receiver(pre_save, sender=Additional_file)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """
+    Deletes old file from filesystem
+    when corresponding `MediaFile` object is updated
+    with new file.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = Additional_file.objects.get(pk=instance.pk).file
+    except Additional_file.DoesNotExist:
+        return False
+
+    new_file = instance.file
+    if not old_file == new_file:
+        if os.path.isfile(old_file.path):
+            os.remove(old_file.path)
